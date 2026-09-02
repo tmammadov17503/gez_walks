@@ -1,5 +1,7 @@
 # GƏZ Walks
 
+[![Deploy GƏZ to GitHub Pages](https://github.com/tmammadov17503/gez_walks/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/tmammadov17503/gez_walks/actions/workflows/deploy-pages.yml)
+
 GƏZ is an Azerbaijani-first dog-walking marketplace prototype for Baku. It helps owners create a warm dog profile, choose a trusted nearby walker, request a walk, follow a simulated live route, and receive a complete walk report.
 
 ## Live website
