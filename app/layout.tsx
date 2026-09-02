@@ -1,33 +1,37 @@
 import type { Metadata } from 'next';
-import { Manrope } from 'next/font/google';
+import { Onest } from 'next/font/google';
 import './globals.css';
 
-const manrope = Manrope({
-  variable: '--font-manrope',
-  subsets: ['latin'],
+const onest = Onest({
+  variable: '--font-onest',
+  subsets: ['latin', 'cyrillic'],
 });
 
 export const metadata: Metadata = {
-  title: 'YOLDA Walks — Bakıda etibarlı it gəzintisi',
-  description:
-    'Bakıda yoxlanılmış it gəzdiricilərini tap, gəzintini sifariş et və canlı izlə.',
+  metadataBase: new URL('https://yolda-walks.mnazaxan.chatgpt.site'),
+  title: 'GƏZ Walks — Trusted dog walking in Baku',
+  description: 'Create your dog, meet a trusted local walker, follow the walk live, and receive a thoughtful report.',
+  icons: { icon: '/favicon.svg' },
   openGraph: {
-    title: 'YOLDA Walks — Sən rahat ol. O, gəzintidə.',
-    description: 'Bakıda yoxlanılmış it gəzdiriciləri, canlı GPS və rahat sifariş.',
-    images: [{ url: '/og.png', width: 1664, height: 909, alt: 'YOLDA Walks' }],
+    title: 'GƏZ Walks — Good walks. Happy dogs.',
+    description: 'Trusted dog walkers around Baku, whenever you need one.',
+    url: 'https://yolda-walks.mnazaxan.chatgpt.site',
+    siteName: 'GƏZ Walks',
+    locale: 'az_AZ',
+    images: [{ url: '/gez-baku-model.png', width: 1536, height: 1024, alt: 'GƏZ miniature Baku neighbourhood' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'YOLDA Walks — Sən rahat ol. O, gəzintidə.',
-    description: 'Bakıda yoxlanılmış it gəzdiriciləri, canlı GPS və rahat sifariş.',
-    images: ['/og.png'],
+    title: 'GƏZ Walks — Good walks. Happy dogs.',
+    description: 'A good walk. Someone you trust.',
+    images: ['/gez-baku-model.png'],
   },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="az">
-      <body className={`${manrope.variable} antialiased`}>{children}</body>
+      <body className={`${onest.variable} antialiased`}>{children}</body>
     </html>
   );
 }

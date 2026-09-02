@@ -1,15 +1,5 @@
-import { chatGPTSignInPath, getChatGPTUser } from '@/app/chatgpt-auth';
-import { YoldaExperience } from '@/app/yolda-experience';
+import { GezExperience } from '@/app/gez-experience';
 
-export const dynamic = 'force-dynamic';
-
-export default async function Home() {
-  const user = await getChatGPTUser();
-
-  return (
-    <YoldaExperience
-      signInPath={chatGPTSignInPath('/dashboard')}
-      userName={user?.displayName ?? null}
-    />
-  );
+export default function Home() {
+  return <GezExperience />;
 }
