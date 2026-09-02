@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "vinext dev",
     "build": "vinext build",
+    "pages:build": "vite build --config vite.pages.config.ts",
     "start": "wrangler dev --config dist/server/wrangler.json",
     "test": "node --test --experimental-strip-types",
     "test:coverage": "node --test --experimental-strip-types --experimental-test-coverage",

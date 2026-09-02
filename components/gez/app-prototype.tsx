@@ -152,7 +152,7 @@ function SignInGate({ copy, onComplete, onBack }: { copy: GezCopy; onComplete: (
         </div>
       </section>
       <section className="relative hidden overflow-hidden bg-[#eae4d8] lg:block">
-        <img src="/gez-baku-model.png" alt="GƏZ miniature Baku walking scene" className="absolute inset-0 h-full w-full object-cover" />
+        <img src="./gez-baku-model.png" alt="GƏZ miniature Baku walking scene" className="absolute inset-0 h-full w-full object-cover" />
         <div className="absolute bottom-10 left-10 max-w-sm rounded-[28px] border border-white/50 bg-[#fffaf1]/90 p-6 backdrop-blur-sm">
           <p className="font-display text-2xl italic text-[#31483b]">“A good walk. Someone you trust.”</p>
         </div>

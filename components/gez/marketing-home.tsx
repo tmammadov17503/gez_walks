@@ -1,6 +1,7 @@
 'use client';
 
-import Image from 'next/image';
+/* eslint-disable next/no-img-element */
+
 import { useState } from 'react';
 import {
   ArrowDownRight,
@@ -142,13 +143,10 @@ export function MarketingHome({ copy, locale, onLocaleChange, onStart }: Marketi
 
         <div className="relative min-h-[500px] lg:min-h-[650px]">
           <div className="absolute inset-x-[-7%] top-[3%] h-[92%] overflow-hidden rounded-[52px] bg-[#efe8dc] lg:inset-x-[-4%]">
-            <Image
-              src="/gez-baku-model.png"
+            <img
+              src="./gez-baku-model.png"
               alt="A miniature Baku neighbourhood with a dog walker following a route home"
-              fill
-              priority
-              sizes="(min-width: 1024px) 58vw, 100vw"
-              className="object-cover object-center"
+              className="h-full w-full object-cover object-center"
             />
             <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 900 650" fill="none" aria-hidden="true">
               <path className="gez-route-line" d="M438 476c73 52 188 73 274 8 55-42 16-88-38-100" stroke="#E68A68" strokeWidth="4" strokeLinecap="round" />
