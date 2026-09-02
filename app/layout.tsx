@@ -8,14 +8,14 @@ const onest = Onest({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://yolda-walks.mnazaxan.chatgpt.site'),
+  metadataBase: new URL('https://gez-walks.mnazaxan.chatgpt.site'),
   title: 'GƏZ Walks — Trusted dog walking in Baku',
   description: 'Create your dog, meet a trusted local walker, follow the walk live, and receive a thoughtful report.',
   icons: { icon: '/favicon.svg' },
   openGraph: {
     title: 'GƏZ Walks — Good walks. Happy dogs.',
     description: 'Trusted dog walkers around Baku, whenever you need one.',
-    url: 'https://yolda-walks.mnazaxan.chatgpt.site',
+    url: 'https://gez-walks.mnazaxan.chatgpt.site',
     siteName: 'GƏZ Walks',
     locale: 'az_AZ',
     images: [{ url: '/gez-baku-model.png', width: 1536, height: 1024, alt: 'GƏZ miniature Baku neighbourhood' }],
