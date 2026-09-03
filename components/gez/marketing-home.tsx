@@ -68,8 +68,8 @@ export function MarketingHome({ copy, locale, onLocaleChange, onStart }: Marketi
   };
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[#f6f1e7] text-[#26362e]">
-      <header className="relative z-40 mx-auto flex w-full max-w-[1480px] items-center justify-between px-5 py-5 sm:px-8 lg:px-12">
+    <main className="min-h-dvh overflow-x-clip bg-[#f6f1e7] text-[#26362e]">
+      <header className="gez-safe-top relative z-40 mx-auto flex w-full max-w-[1480px] items-center justify-between px-5 pb-5 sm:px-8 lg:px-12">
         <a href="#top" aria-label="GƏZ home"><GezLogo /></a>
 
         <nav className="hidden items-center gap-7 text-[0.82rem] font-semibold text-[#5f6962] lg:flex" aria-label="Main navigation">
@@ -98,7 +98,7 @@ export function MarketingHome({ copy, locale, onLocaleChange, onStart }: Marketi
 
         <button
           onClick={() => setMenuOpen((value) => !value)}
-          className="grid size-11 place-items-center rounded-full border border-[#d8d3c7] sm:hidden"
+          className="grid size-11 place-items-center rounded-full border border-[#d8d3c7] lg:hidden"
           aria-expanded={menuOpen}
           aria-label={menuOpen ? 'Close menu' : 'Open menu'}
         >
@@ -107,7 +107,7 @@ export function MarketingHome({ copy, locale, onLocaleChange, onStart }: Marketi
       </header>
 
       {menuOpen && (
-        <div className="relative z-30 mx-4 rounded-[26px] border border-[#d8d3c7] bg-[#fffaf1] p-5 sm:hidden">
+        <div className="relative z-30 mx-4 rounded-[26px] border border-[#d8d3c7] bg-[#fffaf1] p-5 lg:hidden">
           <nav className="grid gap-4 text-left text-sm font-semibold">
             <button onClick={onStart} className="text-left">{copy.navFind}</button>
             <button onClick={() => goTo('how')} className="text-left">{copy.navHow}</button>
@@ -121,12 +121,12 @@ export function MarketingHome({ copy, locale, onLocaleChange, onStart }: Marketi
         </div>
       )}
 
-      <section id="top" className="relative mx-auto grid min-h-[760px] max-w-[1480px] items-center gap-8 px-5 pb-16 pt-8 sm:px-8 lg:grid-cols-[.8fr_1.2fr] lg:px-12 lg:pb-24 lg:pt-10">
+      <section id="top" className="relative mx-auto grid min-h-[calc(100dvh-5.5rem)] max-w-[1480px] items-center gap-8 px-5 pb-16 pt-8 sm:px-8 lg:min-h-[760px] lg:grid-cols-[.8fr_1.2fr] lg:px-12 lg:pb-24 lg:pt-10">
         <div className="relative z-10 max-w-[610px]">
           <p className="mb-7 flex items-center gap-2 text-[0.68rem] font-bold uppercase tracking-[0.19em] text-[#68756d]">
             <span className="size-1.5 rounded-full bg-[#e68a68]" /> {copy.heroEyebrow}
           </p>
-          <h1 className="font-display text-[clamp(3.6rem,7.2vw,7.5rem)] font-medium leading-[0.92] tracking-[-0.065em] text-[#26362e]">
+          <h1 className="font-display text-[clamp(3.25rem,14vw,7.5rem)] font-medium leading-[0.92] tracking-[-0.065em] text-[#26362e] sm:text-[clamp(3.6rem,7.2vw,7.5rem)]">
             {copy.heroTitle}
           </h1>
           <p className="mt-7 max-w-[520px] text-[1.05rem] leading-8 text-[#657068] sm:text-lg">{copy.heroBody}</p>
@@ -141,7 +141,7 @@ export function MarketingHome({ copy, locale, onLocaleChange, onStart }: Marketi
           <p className="mt-10 font-display text-lg italic text-[#56655d]">“{copy.promise}”</p>
         </div>
 
-        <div className="relative min-h-[500px] lg:min-h-[650px]">
+        <div className="relative min-h-[360px] sm:min-h-[500px] lg:min-h-[650px]">
           <div className="absolute inset-x-[-7%] top-[3%] h-[92%] overflow-hidden rounded-[52px] bg-[#efe8dc] lg:inset-x-[-4%]">
             <img
               src="./gez-baku-model.png"

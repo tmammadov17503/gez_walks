@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Onest } from 'next/font/google';
 import './globals.css';
 
@@ -6,6 +6,12 @@ const onest = Onest({
   variable: '--font-onest',
   subsets: ['latin', 'cyrillic'],
 });
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://gez-walks.mnazaxan.chatgpt.site'),

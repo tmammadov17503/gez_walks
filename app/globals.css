@@ -7,9 +7,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-onest);
-  --font-mono: var(--font-onest);
-  --font-heading: var(--font-onest);
+  --font-sans: var(--font-onest, ui-sans-serif), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: ui-monospace, monospace;
+  --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -49,6 +49,10 @@
 }
 
 :root {
+  --gez-safe-top: env(safe-area-inset-top, 0px);
+  --gez-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --gez-safe-left: env(safe-area-inset-left, 0px);
+  --gez-safe-right: env(safe-area-inset-right, 0px);
   --background: oklch(0.967 0.016 93);
   --foreground: oklch(0.31 0.055 161);
   --card: oklch(1 0 0);
@@ -119,15 +123,15 @@
 
 @layer base {
   * { @apply border-border outline-ring/50; }
-  html { @apply scroll-smooth font-sans; }
-  body { @apply bg-background text-foreground; }
+  html { @apply scroll-smooth font-sans; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+  body { @apply bg-background text-foreground; padding-left: var(--gez-safe-left); padding-right: var(--gez-safe-right); }
   button, a, select { @apply focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring; }
 }
 
 @layer components {
-  .font-display { font-family: var(--font-onest), ui-sans-serif, system-ui, sans-serif; }
-  .gez-input { @apply h-12 w-full rounded-2xl border border-[#ddd7cc] bg-[#fdf9f1] px-4 text-sm font-medium outline-none transition focus:border-[#84977c]; }
-  .gez-textarea { @apply min-h-24 w-full rounded-2xl border border-[#ddd7cc] bg-[#fdf9f1] p-4 text-sm font-medium leading-6 outline-none transition focus:border-[#84977c]; }
+  .font-display { font-family: var(--font-onest, ui-sans-serif), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+  .gez-input { @apply h-12 w-full rounded-2xl border border-[#ddd7cc] bg-[#fdf9f1] px-4 text-base font-medium outline-none transition focus:border-[#84977c]; }
+  .gez-textarea { @apply min-h-24 w-full rounded-2xl border border-[#ddd7cc] bg-[#fdf9f1] p-4 text-base font-medium leading-6 outline-none transition focus:border-[#84977c]; }
 }
 
 @keyframes gez-route-draw {
@@ -152,8 +156,55 @@
 
 .gez-float-card { animation: gez-float 5.5s ease-in-out infinite; }
 .gez-progress { animation: gez-progress 4s .6s ease-out both; }
+.gez-safe-top { padding-top: max(1.25rem, var(--gez-safe-top)); }
+.gez-screen-safe {
+  padding-top: max(1.5rem, var(--gez-safe-top));
+  padding-bottom: max(1.5rem, var(--gez-safe-bottom));
+}
+.gez-bottom-nav {
+  bottom: calc(.75rem + var(--gez-safe-bottom));
+  left: max(.75rem, var(--gez-safe-left));
+  right: max(.75rem, var(--gez-safe-right));
+}
+.gez-app-shell { padding-bottom: calc(6.5rem + var(--gez-safe-bottom)); }
+.gez-walker-overlay {
+  padding-top: max(.75rem, var(--gez-safe-top));
+  padding-bottom: max(.75rem, var(--gez-safe-bottom));
+  padding-left: max(.75rem, var(--gez-safe-left));
+  padding-right: max(.75rem, var(--gez-safe-right));
+}
+.gez-booking-overlay {
+  padding-left: max(0px, var(--gez-safe-left));
+  padding-right: max(0px, var(--gez-safe-right));
+}
+.gez-booking-sheet {
+  max-height: calc(100dvh - var(--gez-safe-top));
+  padding-bottom: max(1.25rem, var(--gez-safe-bottom));
+}
+.gez-live-map { min-height: clamp(20rem, 70dvh, 27.5rem); }
 
 ::selection { background: #c8d5bd; color: #26362e; }
+
+@media (max-width: 1023px), (any-pointer: coarse) {
+  button, a, select { min-width: 44px; min-height: 44px; }
+  input, select, textarea { font-size: 16px !important; }
+}
+
+@media (min-width: 768px) and (min-height: 700px) {
+  .gez-live-map { min-height: 35rem; }
+}
+
+@media (min-width: 640px) {
+  .gez-walker-overlay, .gez-booking-overlay {
+    padding-left: max(1.5rem, var(--gez-safe-left));
+    padding-right: max(1.5rem, var(--gez-safe-right));
+  }
+  .gez-booking-sheet { max-height: calc(100dvh - max(3rem, var(--gez-safe-top) + var(--gez-safe-bottom))); }
+}
+
+@media (min-width: 1024px) {
+  .gez-app-shell { padding-bottom: max(2rem, var(--gez-safe-bottom)); }
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }

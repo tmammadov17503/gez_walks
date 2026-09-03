@@ -114,11 +114,11 @@ function SignInGate({ copy, onComplete, onBack }: { copy: GezCopy; onComplete: (
   const [otp, setOtp] = useState('');
 
   return (
-    <main className="grid min-h-screen bg-[#f6f1e7] lg:grid-cols-[.9fr_1.1fr]">
-      <section className="flex min-h-screen flex-col px-5 py-6 sm:px-10 lg:px-16">
+    <main className="grid min-h-dvh bg-[#f6f1e7] lg:grid-cols-[.9fr_1.1fr]">
+      <section className="gez-safe-top flex min-h-dvh flex-col px-5 pb-6 sm:px-10 lg:px-16">
         <div className="flex items-center justify-between"><button onClick={onBack}><GezLogo /></button><span className="text-xs font-semibold text-[#778078]">AZ · EN · RU</span></div>
         <div className="my-auto mx-auto w-full max-w-[470px] py-16">
-          <button onClick={step === 'choice' ? onBack : () => setStep('choice')} className="mb-10 flex items-center gap-2 text-xs font-bold text-[#6d776f]"><ArrowLeft className="size-4" /> Back</button>
+          <button onClick={step === 'choice' ? onBack : () => setStep('choice')} className="mb-10 flex min-h-11 items-center gap-2 rounded-full pr-3 text-xs font-bold text-[#6d776f]"><ArrowLeft className="size-4" /> Back</button>
           <p className="text-[0.67rem] font-bold uppercase tracking-[0.18em] text-[#8a958c]">GƏZ prototype</p>
           <h1 className="font-display mt-4 text-5xl font-medium tracking-[-0.045em]">{step === 'otp' ? copy.enterCode : copy.continuePhone}</h1>
           <p className="mt-4 text-sm leading-6 text-[#737c75]">No password. We use your number only to keep your dog and walks connected to you.</p>
@@ -144,11 +144,13 @@ function SignInGate({ copy, onComplete, onBack }: { copy: GezCopy; onComplete: (
 
           {step === 'otp' && (
             <form className="mt-9" onSubmit={(event) => { event.preventDefault(); if (otp.length === 4) onComplete(); }}>
-              <div className="flex gap-3">
-                {[0, 1, 2, 3].map((index) => <div key={index} className="grid h-16 flex-1 place-items-center rounded-2xl border border-[#d8d3c7] bg-[#fffaf1] text-xl font-bold">{otp[index] ?? '·'}</div>)}
+              <div className="relative rounded-2xl focus-within:outline-2 focus-within:outline-offset-4 focus-within:outline-[#84977c]">
+                <div className="flex gap-3" aria-hidden="true">
+                  {[0, 1, 2, 3].map((index) => <div key={index} className="grid h-16 flex-1 place-items-center rounded-2xl border border-[#d8d3c7] bg-[#fffaf1] text-xl font-bold">{otp[index] ?? '·'}</div>)}
+                </div>
+                <input value={otp} onChange={(event) => setOtp(event.target.value.replace(/\D/g, '').slice(0, 4))} inputMode="numeric" autoComplete="one-time-code" maxLength={4} aria-label="One-time code" aria-describedby="otp-help" className="absolute inset-0 h-full w-full cursor-text rounded-2xl opacity-0" />
               </div>
-              <input value={otp} onChange={(event) => setOtp(event.target.value.replace(/\D/g, '').slice(0, 4))} inputMode="numeric" aria-label="One-time code" className="absolute h-px w-px opacity-0" />
-              <p className="mt-4 text-xs text-[#7a837c]">Prototype tip: enter any four digits.</p>
+              <p id="otp-help" className="mt-4 text-xs text-[#7a837c]">Prototype tip: tap the code boxes and enter any four digits.</p>
               <button disabled={otp.length !== 4} className="mt-4 h-14 w-full rounded-2xl bg-[#31483b] text-sm font-bold text-white disabled:opacity-40">{copy.verifyCode}</button>
             </form>
           )}
@@ -178,7 +180,7 @@ function DogProfileForm({ copy, locale, initial, onSave, onBack, backLabel, subm
   const set = <K extends keyof GezDog>(key: K, value: GezDog[K]) => setDog((current) => ({ ...current, [key]: value }));
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#f6f1e7] px-5 py-6 sm:px-8">
+    <main className="gez-screen-safe relative min-h-dvh overflow-x-clip bg-[#f6f1e7] px-5 py-6 sm:px-8">
       <img src="./gez-dog-care-3d.webp" alt="" aria-hidden="true" className="pointer-events-none fixed inset-0 h-full w-full object-cover object-[34%_center]" />
       <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(90deg,rgba(246,241,231,0.42)_0%,rgba(246,241,231,0.72)_45%,rgba(246,241,231,0.96)_100%)]" />
       <div className="relative mx-auto max-w-[1050px]">
@@ -225,8 +227,8 @@ function DogProfileForm({ copy, locale, initial, onSave, onBack, backLabel, subm
 function AppNavigation({ tab, setTab, copy }: { tab: AppTab; setTab: (tab: AppTab) => void; copy: GezCopy }) {
   const items: Array<[AppTab, string, typeof Home]> = [['home', copy.appHome, Home], ['walk', copy.appWalk, Dog], ['activity', copy.appActivity, Activity], ['dog', copy.appDog, Heart], ['profile', copy.appProfile, UserRound]];
   return (
-    <nav className="fixed inset-x-3 bottom-3 z-40 flex h-17 items-center justify-around rounded-[24px] border border-[#ddd7cc] bg-[#fffaf1]/95 px-2 backdrop-blur-lg md:static md:h-auto md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none" aria-label="App navigation">
-      {items.map(([id, label, Icon]) => <button key={id} onClick={() => setTab(id)} className={`flex min-w-13 flex-col items-center gap-1 rounded-2xl px-3 py-2 text-[0.6rem] font-bold transition md:flex-row md:gap-2 md:text-xs ${tab === id ? 'bg-[#31483b] text-white' : 'text-[#747f77]'}`}><Icon className="size-4" />{label}</button>)}
+    <nav className="gez-bottom-nav fixed inset-x-3 z-40 flex h-17 items-center justify-around rounded-[24px] border border-[#ddd7cc] bg-[#fffaf1]/95 px-2 backdrop-blur-lg lg:static lg:h-auto lg:border-0 lg:bg-transparent lg:p-0 lg:backdrop-blur-none" aria-label="App navigation">
+      {items.map(([id, label, Icon]) => <button key={id} onClick={() => setTab(id)} className={`flex min-w-13 flex-col items-center gap-1 rounded-2xl px-3 py-2 text-[0.6rem] font-bold transition lg:flex-row lg:gap-2 lg:text-xs ${tab === id ? 'bg-[#31483b] text-white' : 'text-[#747f77]'}`}><Icon className="size-4" />{label}</button>)}
     </nav>
   );
 }
@@ -246,7 +248,7 @@ function WalkerCard({ walker, duration, onOpen }: { walker: GezWalker; duration:
 function LiveMap({ progress }: { progress: number }) {
   const dash = 520 - (520 * progress) / 100;
   return (
-    <div className="relative min-h-[440px] overflow-hidden rounded-[32px] bg-[#dce3da] sm:min-h-[560px]">
+    <div className="gez-live-map relative overflow-hidden rounded-[32px] bg-[#dce3da]">
       <div className="absolute left-[8%] top-[8%] h-28 w-40 rotate-6 rounded-[22px] bg-[#eee7d8]" />
       <div className="absolute right-[7%] top-[12%] h-36 w-44 -rotate-3 rounded-[22px] bg-[#e9e1d2]" />
       <div className="absolute bottom-[8%] left-[12%] h-40 w-48 rotate-2 rounded-[24px] bg-[#f0e9dc]" />
@@ -351,7 +353,7 @@ export function AppPrototype({ copy, locale, onLocaleChange, onExit }: AppProtot
 
   if (status && status !== 'walking' && status !== 'completed') {
     return (
-      <main className="flex min-h-screen flex-col bg-[#f6f1e7] px-5 py-6 sm:px-8">
+      <main className="gez-screen-safe flex min-h-dvh flex-col bg-[#f6f1e7] px-5 py-6 sm:px-8">
         <div className="mx-auto flex w-full max-w-[1080px] items-center justify-between"><GezLogo /><button onClick={() => setStatus(null)} className="grid size-11 place-items-center rounded-full border border-[#d8d3c7]"><X className="size-4" /></button></div>
         <section className="m-auto w-full max-w-[720px] py-16 text-center">
           <span className="mx-auto grid size-20 place-items-center rounded-full bg-[#dfe7d8]"><CheckCircle2 className="size-8 text-[#587050]" /></span>
@@ -372,7 +374,7 @@ export function AppPrototype({ copy, locale, onLocaleChange, onExit }: AppProtot
 
   if (status === 'walking') {
     return (
-      <main className="min-h-screen bg-[#f6f1e7] px-4 py-4 sm:px-8 sm:py-6">
+      <main className="gez-screen-safe min-h-dvh bg-[#f6f1e7] px-4 py-4 sm:px-8 sm:py-6">
         <div className="mx-auto max-w-[1200px]">
           <div className="mb-6 flex items-center justify-between"><button onClick={() => setStatus('accepted')} className="grid size-11 place-items-center rounded-full border border-[#d8d3c7]"><ArrowLeft className="size-4" /></button><GezLogo /><span className="rounded-full bg-[#f0ddcf] px-3 py-2 text-[0.65rem] font-bold text-[#8c523f]">LIVE</span></div>
           <div className="grid gap-6 lg:grid-cols-[1.35fr_.65fr]">
@@ -391,7 +393,7 @@ export function AppPrototype({ copy, locale, onLocaleChange, onExit }: AppProtot
 
   if (status === 'completed') {
     return (
-      <main className="min-h-screen bg-[#f6f1e7] px-5 py-6 sm:px-8">
+      <main className="gez-screen-safe min-h-dvh bg-[#f6f1e7] px-5 py-6 sm:px-8">
         <div className="mx-auto max-w-[1050px]">
           <div className="flex items-center justify-between"><button onClick={() => { setStatus(null); setTab('activity'); }} className="grid size-11 place-items-center rounded-full border border-[#d8d3c7]"><ArrowLeft className="size-4" /></button><span className="text-xs font-bold uppercase tracking-[0.16em] text-[#7b857e]">{t.report}</span><GezLogo /></div>
           <section className="py-12 text-center"><p className="text-5xl">☀</p><h1 className="font-display mt-5 text-5xl font-medium tracking-[-0.05em] sm:text-7xl">{copy.reportTitle}</h1><p className="mt-4 text-sm text-[#737d75]">Yasamal · Today with Nigar</p></section>
@@ -402,7 +404,7 @@ export function AppPrototype({ copy, locale, onLocaleChange, onExit }: AppProtot
               <div className="rounded-[26px] border border-[#ddd7cc] bg-[#fffaf1] p-5"><h3 className="text-xs font-bold uppercase tracking-[0.14em] text-[#858e87]">{t.summary}</h3><div className="mt-5 grid grid-cols-3 gap-3 text-sm"><div><span className="block text-[#7d867f]">Pee</span><strong>× 3</strong></div><div><span className="block text-[#7d867f]">Poop</span><strong>× 1</strong></div><div><span className="block text-[#7d867f]">Water</span><strong>Yes</strong></div></div></div>
               <div className="rounded-[26px] border border-[#ddd7cc] bg-[#fffaf1] p-5"><p className="text-xs font-bold uppercase tracking-[0.14em] text-[#858e87]">{t.note}</p><p className="mt-4 text-sm leading-6">“Milo was full of energy today. We did two loops around the park, had a water break halfway through and he was very calm around other dogs.”</p></div>
               <div className="grid grid-cols-3 gap-2">{['photo-1552053831-71594a27632d', 'photo-1558788353-f76d92427f16', 'photo-1517849845537-4d257902454a'].map((id) => <img key={id} src={`https://images.unsplash.com/${id}?auto=format&fit=crop&w=400&q=80`} alt="Walk update" className="aspect-square rounded-2xl object-cover" />)}</div>
-              <div className="rounded-[26px] border border-[#ddd7cc] bg-[#fffaf1] p-5 text-center"><p className="text-sm font-bold">{t.rate}</p><div className="mt-3 flex justify-center gap-2">{[1, 2, 3, 4, 5].map((star) => <button key={star} onClick={() => setRated(star)} aria-label={`Rate ${star} stars`}><Star className={`size-6 ${rated >= star ? 'fill-[#d68160] text-[#d68160]' : 'text-[#c9c5ba]'}`} /></button>)}</div></div>
+              <div className="rounded-[26px] border border-[#ddd7cc] bg-[#fffaf1] p-5 text-center"><p className="text-sm font-bold">{t.rate}</p><div className="mt-3 flex justify-center gap-1">{[1, 2, 3, 4, 5].map((star) => <button key={star} onClick={() => setRated(star)} aria-label={`Rate ${star} stars`} className="grid size-11 place-items-center rounded-full"><Star className={`size-6 ${rated >= star ? 'fill-[#d68160] text-[#d68160]' : 'text-[#c9c5ba]'}`} /></button>)}</div></div>
               <button onClick={() => { setStatus(null); setSelectedWalker(gezWalkers[0]); setBookingOpen(true); }} className="h-14 rounded-full bg-[#31483b] text-sm font-bold text-white">{copy.bookAgain}</button>
             </div>
           </div>
@@ -414,9 +416,9 @@ export function AppPrototype({ copy, locale, onLocaleChange, onExit }: AppProtot
   const screenTitle = tab === 'walk' ? copy.whenWalk : tab === 'activity' ? t.history : tab === 'dog' ? dog?.name : tab === 'profile' ? t.account : t.welcome;
 
   return (
-    <main className="min-h-screen bg-[#f6f1e7] pb-24 text-[#26362e] md:pb-8">
-      <header className="sticky top-0 z-30 border-b border-[#ded8cc] bg-[#f6f1e7]/92 px-5 py-4 backdrop-blur-lg sm:px-8">
-        <div className="mx-auto flex max-w-[1380px] items-center justify-between gap-6"><button onClick={onExit}><GezLogo /></button><div className="hidden md:block"><AppNavigation tab={tab} setTab={setTab} copy={copy} /></div><div className="flex items-center gap-3"><div className="hidden sm:block"><LanguageButtons locale={locale} onChange={onLocaleChange} /></div><button onClick={() => setTab('profile')} className="grid size-10 place-items-center rounded-full bg-[#dfe7d8] text-xs font-bold">AA</button></div></div>
+    <main className="gez-app-shell min-h-dvh bg-[#f6f1e7] text-[#26362e]">
+      <header className="gez-safe-top sticky top-0 z-30 border-b border-[#ded8cc] bg-[#f6f1e7]/92 px-5 pb-4 backdrop-blur-lg sm:px-8">
+        <div className="mx-auto flex max-w-[1380px] items-center justify-between gap-6"><button onClick={onExit}><GezLogo /></button><div className="hidden lg:block"><AppNavigation tab={tab} setTab={setTab} copy={copy} /></div><div className="flex items-center gap-3"><div className="hidden sm:block"><LanguageButtons locale={locale} onChange={onLocaleChange} /></div><button onClick={() => setTab('profile')} className="grid size-10 place-items-center rounded-full bg-[#dfe7d8] text-xs font-bold">AA</button></div></div>
       </header>
       <div className="mx-auto max-w-[1380px] px-5 py-8 sm:px-8 lg:py-11">
         <div className="mb-8 flex items-end justify-between gap-4"><div><p className="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-[#8a938c]">GƏZ · Baku pilot</p><h1 className="font-display mt-2 text-4xl font-medium tracking-[-0.045em] sm:text-6xl">{screenTitle}</h1></div>{tab === 'dog' && <button onClick={() => setEditingDog(true)} className="rounded-full border border-[#d8d3c7] px-4 py-2.5 text-xs font-bold"><Edit3 className="mr-2 inline size-3.5" />{t.editDog}</button>}</div>
@@ -432,9 +434,9 @@ export function AppPrototype({ copy, locale, onLocaleChange, onExit }: AppProtot
           <section>
             <div className="grid gap-3 rounded-[28px] border border-[#ddd7cc] bg-[#fffaf1] p-4 sm:grid-cols-2 lg:grid-cols-4">
               <div><span className="px-2 text-[0.62rem] font-bold uppercase tracking-[0.12em] text-[#89928b]">{t.today}</span><div className="mt-2 flex gap-1">{['Today', 'Tomorrow'].map((item) => <button key={item} onClick={() => setDay(item)} className={`flex-1 rounded-xl px-3 py-3 text-xs font-bold ${day === item ? 'bg-[#31483b] text-white' : 'bg-[#ede8de]'}`}>{item}</button>)}</div></div>
-              <label><span className="px-2 text-[0.62rem] font-bold uppercase tracking-[0.12em] text-[#89928b]">{t.time}</span><input type="time" value={time} onChange={(event) => setTime(event.target.value)} className="mt-2 h-11 w-full rounded-xl bg-[#ede8de] px-3 text-xs font-bold outline-none" /></label>
+              <label><span className="px-2 text-[0.62rem] font-bold uppercase tracking-[0.12em] text-[#89928b]">{t.time}</span><input type="time" value={time} onChange={(event) => setTime(event.target.value)} className="mt-2 h-11 w-full rounded-xl bg-[#ede8de] px-3 text-base font-bold outline-none" /></label>
               <div><span className="px-2 text-[0.62rem] font-bold uppercase tracking-[0.12em] text-[#89928b]">{t.duration}</span><div className="mt-2 flex gap-1">{durations.map((item) => <button key={item} onClick={() => setDuration(item)} className={`flex-1 rounded-xl py-3 text-[0.65rem] font-bold ${duration === item ? 'bg-[#31483b] text-white' : 'bg-[#ede8de]'}`}>{item}</button>)}</div></div>
-              <label><span className="px-2 text-[0.62rem] font-bold uppercase tracking-[0.12em] text-[#89928b]">{t.district}</span><select value={district} onChange={(event) => setDistrict(event.target.value as District | 'All')} className="mt-2 h-11 w-full rounded-xl bg-[#ede8de] px-3 text-xs font-bold outline-none">{districts.map((item) => <option key={item} value={item}>{item === 'All' ? t.all : item}</option>)}</select></label>
+              <label><span className="px-2 text-[0.62rem] font-bold uppercase tracking-[0.12em] text-[#89928b]">{t.district}</span><select value={district} onChange={(event) => setDistrict(event.target.value as District | 'All')} className="mt-2 h-11 w-full rounded-xl bg-[#ede8de] px-3 text-base font-bold outline-none">{districts.map((item) => <option key={item} value={item}>{item === 'All' ? t.all : item}</option>)}</select></label>
             </div>
             <div className={`mt-4 flex items-start gap-3 rounded-[22px] border p-4 ${conditions.level === 'hot' ? 'border-[#e1b59e] bg-[#f3e0d4]' : 'border-[#cbd6c4] bg-[#e6eddf]'}`}><CloudSun className="mt-0.5 size-5" /><div><strong className="text-sm">{conditions.temperature}°C · {conditions.level === 'hot' ? 'Hot pavement risk' : 'Comfortable'}</strong><p className="mt-1 text-xs leading-5 text-[#667068]">{conditions.message[locale]}</p></div></div>
             <div className="mt-8 flex items-center justify-between"><h2 className="text-xl font-bold">{copy.nearby}</h2><span className="text-xs text-[#78827b]">{matches.length} {t.available}</span></div>
@@ -458,26 +460,26 @@ export function AppPrototype({ copy, locale, onLocaleChange, onExit }: AppProtot
         )}
       </div>
 
-      <div className="md:hidden"><AppNavigation tab={tab} setTab={setTab} copy={copy} /></div>
+      <div className="lg:hidden"><AppNavigation tab={tab} setTab={setTab} copy={copy} /></div>
 
       {selectedWalker && !bookingOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-[#26362e]/45 p-3 backdrop-blur-sm sm:p-6" onClick={() => setSelectedWalker(null)}>
+        <div className="gez-walker-overlay fixed inset-0 z-50 overflow-y-auto bg-[#26362e]/45 p-3 backdrop-blur-sm sm:p-6" onClick={() => setSelectedWalker(null)}>
           <section className="mx-auto my-4 max-w-[980px] overflow-hidden rounded-[34px] bg-[#fffaf1]" onClick={(event) => event.stopPropagation()}>
-            <div className="relative grid lg:grid-cols-[.85fr_1.15fr]"><img src={selectedWalker.portrait} alt={selectedWalker.name} className="h-[360px] w-full object-cover lg:h-full" /><button onClick={() => setSelectedWalker(null)} className="absolute right-4 top-4 grid size-10 place-items-center rounded-full bg-[#fffaf1]"><X className="size-4" /></button><div className="p-6 sm:p-10"><p className="text-[0.65rem] font-bold uppercase tracking-[0.16em] text-[#7d887f]">{selectedWalker.district}</p><h2 className="font-display mt-3 text-5xl font-medium tracking-[-0.05em]">{selectedWalker.name}</h2><p className="mt-3 text-sm font-bold">{selectedWalker.rating} ★ · {selectedWalker.walks} walks</p><p className="mt-6 text-sm leading-7 text-[#68736c]">{selectedWalker.about}</p><div className="mt-7 grid gap-3 sm:grid-cols-2">{selectedWalker.trustTags.map((tag) => <span key={tag} className="flex items-center gap-2 rounded-2xl bg-[#e7ecdf] px-4 py-3 text-xs font-semibold"><CheckCircle2 className="size-4 text-[#687e62]" />{tag}</span>)}</div><dl className="mt-7 grid gap-4 border-y border-[#e0dbd1] py-5 text-sm sm:grid-cols-2"><div><dt className="text-xs text-[#879089]">Availability</dt><dd className="mt-1 font-semibold">{selectedWalker.availability}</dd></div><div><dt className="text-xs text-[#879089]">Languages</dt><dd className="mt-1 font-semibold">{selectedWalker.languages.join(' · ')}</dd></div><div><dt className="text-xs text-[#879089]">Dog sizes</dt><dd className="mt-1 font-semibold capitalize">{selectedWalker.acceptedSizes.join(' · ')}</dd></div><div><dt className="text-xs text-[#879089]">Experience</dt><dd className="mt-1 font-semibold">{selectedWalker.specialties.join(' · ')}</dd></div></dl><div className="mt-6 rounded-2xl bg-[#f0e8da] p-4"><strong className="text-sm">{copy.meetFirst}</strong><p className="mt-1 text-xs leading-5 text-[#6e776f]">{t.freeMeet}</p></div><button onClick={() => setBookingOpen(true)} className="mt-5 h-14 w-full rounded-full bg-[#31483b] text-sm font-bold text-white">{copy.chooseWalker}</button></div></div>
+            <div className="relative grid lg:grid-cols-[.85fr_1.15fr]"><img src={selectedWalker.portrait} alt={selectedWalker.name} className="h-[min(360px,48dvh)] min-h-[240px] w-full object-cover lg:h-full" /><button onClick={() => setSelectedWalker(null)} aria-label="Close walker profile" className="absolute right-4 top-4 grid size-11 place-items-center rounded-full bg-[#fffaf1]"><X className="size-4" /></button><div className="p-6 sm:p-10"><p className="text-[0.65rem] font-bold uppercase tracking-[0.16em] text-[#7d887f]">{selectedWalker.district}</p><h2 className="font-display mt-3 text-4xl font-medium tracking-[-0.05em] sm:text-5xl">{selectedWalker.name}</h2><p className="mt-3 text-sm font-bold">{selectedWalker.rating} ★ · {selectedWalker.walks} walks</p><p className="mt-6 text-sm leading-7 text-[#68736c]">{selectedWalker.about}</p><div className="mt-7 grid gap-3 sm:grid-cols-2">{selectedWalker.trustTags.map((tag) => <span key={tag} className="flex items-center gap-2 rounded-2xl bg-[#e7ecdf] px-4 py-3 text-xs font-semibold"><CheckCircle2 className="size-4 text-[#687e62]" />{tag}</span>)}</div><dl className="mt-7 grid gap-4 border-y border-[#e0dbd1] py-5 text-sm sm:grid-cols-2"><div><dt className="text-xs text-[#879089]">Availability</dt><dd className="mt-1 font-semibold">{selectedWalker.availability}</dd></div><div><dt className="text-xs text-[#879089]">Languages</dt><dd className="mt-1 font-semibold">{selectedWalker.languages.join(' · ')}</dd></div><div><dt className="text-xs text-[#879089]">Dog sizes</dt><dd className="mt-1 font-semibold capitalize">{selectedWalker.acceptedSizes.join(' · ')}</dd></div><div><dt className="text-xs text-[#879089]">Experience</dt><dd className="mt-1 font-semibold">{selectedWalker.specialties.join(' · ')}</dd></div></dl><div className="mt-6 rounded-2xl bg-[#f0e8da] p-4"><strong className="text-sm">{copy.meetFirst}</strong><p className="mt-1 text-xs leading-5 text-[#6e776f]">{t.freeMeet}</p></div><button onClick={() => setBookingOpen(true)} className="mt-5 h-14 w-full rounded-full bg-[#31483b] text-sm font-bold text-white">{copy.chooseWalker}</button></div></div>
           </section>
         </div>
       )}
 
       {bookingOpen && selectedWalker && (
-        <div className="fixed inset-0 z-[60] flex items-end justify-center bg-[#26362e]/45 p-0 backdrop-blur-sm sm:items-center sm:p-6" onClick={() => setBookingOpen(false)}>
-          <section className="w-full max-w-[620px] rounded-t-[34px] bg-[#fffaf1] p-6 sm:rounded-[34px] sm:p-8" onClick={(event) => event.stopPropagation()}>
-            <div className="flex items-center justify-between"><h2 className="font-display text-4xl font-medium tracking-[-0.045em]">{t.summary}</h2><button onClick={() => setBookingOpen(false)} className="grid size-10 place-items-center rounded-full border border-[#ddd7cc]"><X className="size-4" /></button></div>
-            <div className="mt-7 flex items-center justify-between rounded-[24px] bg-[#ece7dc] p-4"><div className="flex items-center gap-3"><img src="./gez-milo-3d.webp" alt="Milo" className="size-12 rounded-full object-cover" /><strong>Milo</strong></div><span className="text-xs text-[#7e8780]">{t.with}</span><div className="flex items-center gap-3"><strong>{selectedWalker.name}</strong><img src={selectedWalker.portrait} alt={selectedWalker.name} className="size-12 rounded-full object-cover" /></div></div>
+        <div className="gez-booking-overlay fixed inset-0 z-[60] flex items-end justify-center overflow-y-auto overscroll-contain bg-[#26362e]/45 p-0 backdrop-blur-sm sm:items-center sm:p-6" onClick={() => setBookingOpen(false)}>
+          <dialog open aria-modal="true" aria-labelledby="booking-summary-title" className="gez-booking-sheet relative m-0 w-full max-w-[620px] overflow-y-auto rounded-t-[34px] border-0 bg-[#fffaf1] p-5 text-inherit sm:rounded-[34px] sm:p-8" onClick={(event) => event.stopPropagation()}>
+            <div className="flex items-center justify-between"><h2 id="booking-summary-title" className="font-display text-3xl font-medium tracking-[-0.045em] sm:text-4xl">{t.summary}</h2><button onClick={() => setBookingOpen(false)} aria-label="Close booking summary" className="grid size-11 place-items-center rounded-full border border-[#ddd7cc]"><X className="size-4" /></button></div>
+            <div className="mt-5 grid grid-cols-[1fr_auto_1fr] items-center gap-2 rounded-[24px] bg-[#ece7dc] p-3 sm:mt-7 sm:p-4"><div className="flex min-w-0 flex-col items-center gap-2 sm:flex-row"><img src="./gez-milo-3d.webp" alt="Milo" className="size-10 shrink-0 rounded-full object-cover sm:size-12" /><strong className="text-sm">Milo</strong></div><span className="text-xs text-[#7e8780]">{t.with}</span><div className="flex min-w-0 flex-col-reverse items-center justify-end gap-2 sm:flex-row"><strong className="text-center text-sm">{selectedWalker.name}</strong><img src={selectedWalker.portrait} alt={selectedWalker.name} className="size-10 shrink-0 rounded-full object-cover sm:size-12" /></div></div>
             <dl className="mt-5 grid grid-cols-2 gap-4 border-y border-[#e0dbd1] py-5 text-sm sm:grid-cols-4"><div><dt className="text-xs text-[#89918b]">Date</dt><dd className="mt-1 font-bold">{day}</dd></div><div><dt className="text-xs text-[#89918b]">Time</dt><dd className="mt-1 font-bold">{time}</dd></div><div><dt className="text-xs text-[#89918b]">Duration</dt><dd className="mt-1 font-bold">{duration} min</dd></div><div><dt className="text-xs text-[#89918b]">Total</dt><dd className="mt-1 font-bold">{priceForDuration(selectedWalker.price45, duration)} AZN</dd></div></dl>
             <div className="mt-5 grid gap-3"><input placeholder={t.apartment} defaultValue="Building 12, entrance B, floor 4" className="gez-input" /><input placeholder={t.pickup} defaultValue="Call from the courtyard; I will bring Milo down." className="gez-input" /><textarea placeholder={t.special} defaultValue={dog?.instructions} className="gez-textarea" /></div>
             <div className={`mt-4 rounded-2xl p-4 text-xs ${conditions.level === 'hot' ? 'bg-[#f3e0d4]' : 'bg-[#e6eddf]'}`}><strong>{conditions.temperature}°C · {t.conditions}</strong><p className="mt-1 text-[#657068]">{conditions.message[locale]}</p></div>
             <button onClick={requestWalk} className="mt-5 h-14 w-full rounded-full bg-[#31483b] text-sm font-bold text-white">{copy.requestWalk}</button>
-          </section>
+          </dialog>
         </div>
       )}
     </main>
