@@ -1,6 +1,30 @@
 from playwright.sync_api import sync_playwright
 
 
+def verify_back_navigation(browser):
+    context = browser.new_context(viewport={"width": 1280, "height": 900})
+    page = context.new_page()
+    page.goto("http://localhost:3000", wait_until="networkidle")
+    page.evaluate("localStorage.clear()")
+    page.reload(wait_until="networkidle")
+
+    page.locator("header").get_by_role("button", name="Find a walker", exact=True).click()
+    page.get_by_role("button", name="Continue with phone").wait_for()
+    page.go_back(wait_until="networkidle")
+    page.get_by_role("heading", name="Good walks. Happy dogs.").wait_for(timeout=3000)
+
+    page.locator("header").get_by_role("button", name="Find a walker", exact=True).click()
+    page.get_by_role("button", name="Continue with Apple").click()
+    page.get_by_role("heading", name="Who are we walking?").wait_for()
+    page.locator("img[src$='gez-dog-care-3d.webp']").wait_for()
+    page.get_by_label("Name").fill("Luna")
+    page.get_by_role("button", name="Back to sign in").click()
+    page.get_by_role("button", name="Continue with phone").wait_for()
+    page.get_by_role("button", name="Continue with Apple").click()
+    assert page.get_by_label("Name").input_value() == "Luna"
+    context.close()
+
+
 def verify_desktop(page):
     page.set_viewport_size({"width": 1440, "height": 1000})
     page.goto("http://localhost:3000", wait_until="networkidle")
@@ -78,6 +102,7 @@ def verify_webmcp(browser):
 
 with sync_playwright() as playwright:
     browser = playwright.chromium.launch(headless=True)
+    verify_back_navigation(browser)
     desktop_page = browser.new_page()
     verify_desktop(desktop_page)
     verify_mobile(browser)

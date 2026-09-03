@@ -71,6 +71,7 @@ const appText: Record<GezLocale, Record<string, string>> = {
     message: 'Message Nigar', urgent: 'Call if urgent', route: 'Live route', water: 'Water break', photo: 'Photo added', heading: 'Heading home',
     report: 'Walk report', bathroom: 'Bathroom', photos: 'Photos', note: "Nigar's note", rate: 'Rate Nigar', history: 'Walk history',
     account: 'Prototype account', signout: 'Sign out of demo', conditions: 'Walk conditions', save: 'Save changes', formNote: 'The details that help a walker understand Milo.',
+    back: 'Back', backToSignIn: 'Back to sign in', backToDog: 'Back to Milo', dogDetails: 'Dog details',
     freeMeet: 'First-time owners can arrange a free meet & greet before booking.', noMatch: 'No compatible walker in this district yet. Try All Baku.',
   },
   az: {
@@ -81,6 +82,7 @@ const appText: Record<GezLocale, Record<string, string>> = {
     message: 'Nigara yaz', urgent: 'Təcili zəng', route: 'Canlı marşrut', water: 'Su fasiləsi', photo: 'Foto əlavə edildi', heading: 'Evə qayıdırlar',
     report: 'Gəzinti hesabatı', bathroom: 'Tualet', photos: 'Fotolar', note: 'Nigarın qeydi', rate: 'Nigarı qiymətləndir', history: 'Gəzinti tarixçəsi',
     account: 'Prototip hesabı', signout: 'Demodan çıx', conditions: 'Gəzinti şəraiti', save: 'Dəyişiklikləri saxla', formNote: 'Gəzdiricinin Milonu tanımasına kömək edən detallar.',
+    back: 'Geri', backToSignIn: 'Girişə qayıt', backToDog: 'Milonun profilinə qayıt', dogDetails: 'İt məlumatları',
     freeMeet: 'İlk dəfə sifariş edənlər əvvəlcədən pulsuz tanışlıq görüşü edə bilərlər.', noMatch: 'Bu rayonda Milo üçün uyğun gəzdirici yoxdur. Bütün Bakını yoxla.',
   },
   ru: {
@@ -91,6 +93,7 @@ const appText: Record<GezLocale, Record<string, string>> = {
     message: 'Написать Нигяр', urgent: 'Срочный звонок', route: 'Живой маршрут', water: 'Перерыв на воду', photo: 'Добавлено фото', heading: 'Возвращаются домой',
     report: 'Отчёт о прогулке', bathroom: 'Туалет', photos: 'Фото', note: 'Заметка Нигяр', rate: 'Оценить Нигяр', history: 'История прогулок',
     account: 'Демо-аккаунт', signout: 'Выйти из демо', conditions: 'Условия прогулки', save: 'Сохранить', formNote: 'Детали, которые помогут лучше понять Майло.',
+    back: 'Назад', backToSignIn: 'Вернуться ко входу', backToDog: 'Вернуться к Майло', dogDetails: 'Данные собаки',
     freeMeet: 'Перед первым заказом можно бесплатно познакомиться с выгульщиком.', noMatch: 'В этом районе пока нет подходящего человека. Выберите весь Баку.',
   },
 };
@@ -169,26 +172,31 @@ function ToggleRow({ label, value, onChange }: { label: string; value: boolean; 
   );
 }
 
-function DogProfileForm({ copy, locale, initial, onSave, onBack }: { copy: GezCopy; locale: GezLocale; initial: GezDog; onSave: (dog: GezDog) => void; onBack?: () => void }) {
+function DogProfileForm({ copy, locale, initial, onSave, onBack, backLabel, submitLabel }: { copy: GezCopy; locale: GezLocale; initial: GezDog; onSave: (dog: GezDog) => void; onBack: (draft: GezDog) => void; backLabel: string; submitLabel: string }) {
   const [dog, setDog] = useState(initial);
   const t = appText[locale];
   const set = <K extends keyof GezDog>(key: K, value: GezDog[K]) => setDog((current) => ({ ...current, [key]: value }));
 
   return (
-    <main className="min-h-screen bg-[#f6f1e7] px-5 py-6 sm:px-8">
-      <div className="mx-auto max-w-[950px]">
-        <div className="flex items-center justify-between">{onBack ? <button onClick={onBack} className="grid size-11 place-items-center rounded-full border border-[#d8d3c7]"><ArrowLeft className="size-4" /></button> : <GezLogo />}<span className="text-xs font-bold text-[#78827b]">01 / 02</span></div>
+    <main className="relative min-h-screen overflow-hidden bg-[#f6f1e7] px-5 py-6 sm:px-8">
+      <img src="./gez-dog-care-3d.webp" alt="" aria-hidden="true" className="pointer-events-none fixed inset-0 h-full w-full object-cover object-[34%_center]" />
+      <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(90deg,rgba(246,241,231,0.42)_0%,rgba(246,241,231,0.72)_45%,rgba(246,241,231,0.96)_100%)]" />
+      <div className="relative mx-auto max-w-[1050px]">
+        <div className="flex items-center justify-between">
+          <button type="button" onClick={() => onBack(dog)} aria-label={backLabel} className="flex h-11 items-center gap-2 rounded-full border border-white/70 bg-[#fffaf1]/88 px-4 text-xs font-bold text-[#46554b] backdrop-blur-md transition hover:bg-[#fffaf1]"><ArrowLeft className="size-4" /><span>{t.back}</span></button>
+          <span className="rounded-full border border-white/70 bg-[#fffaf1]/78 px-4 py-2 text-[0.65rem] font-bold uppercase tracking-[0.14em] text-[#667269] backdrop-blur-md">GƏZ · {t.dogDetails}</span>
+        </div>
         <div className="mt-12 grid gap-10 lg:grid-cols-[.7fr_1.3fr]">
-          <div>
+          <div className="self-start rounded-[30px] border border-white/60 bg-[#f6f1e7]/72 p-5 backdrop-blur-md lg:border-0 lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
             <div className="relative mx-auto grid size-44 place-items-center overflow-hidden rounded-[44%] bg-[#d8e0ce]">
-              <img src="https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&w=600&q=85" alt="Milo the Golden Retriever" className="h-full w-full object-cover" />
+              <img src="./gez-milo-3d.webp" alt="Milo the Golden Retriever" className="h-full w-full object-cover" />
               <button className="absolute bottom-3 right-3 grid size-10 place-items-center rounded-full bg-[#fffaf1]"><Edit3 className="size-4" /></button>
             </div>
             <h1 className="font-display mt-8 text-5xl font-medium leading-none tracking-[-0.045em]">{copy.whoWalking}</h1>
             <p className="mt-5 text-sm leading-6 text-[#717a73]">{t.formNote}</p>
           </div>
 
-          <form onSubmit={(event) => { event.preventDefault(); onSave(dog); }} className="grid gap-5 rounded-[34px] border border-[#ddd7cc] bg-[#fffaf1] p-5 sm:grid-cols-2 sm:p-8">
+          <form onSubmit={(event) => { event.preventDefault(); onSave(dog); }} className="grid gap-5 rounded-[34px] border border-white/75 bg-[#fffaf1]/95 p-5 shadow-[0_24px_80px_rgba(49,72,59,0.12)] backdrop-blur-xl sm:grid-cols-2 sm:p-8">
             <label className="grid gap-2 text-xs font-bold">Name<input required value={dog.name} onChange={(event) => set('name', event.target.value)} className="gez-input" /></label>
             <label className="grid gap-2 text-xs font-bold">Breed<input required value={dog.breed} onChange={(event) => set('breed', event.target.value)} className="gez-input" /></label>
             <label className="grid gap-2 text-xs font-bold">Age<input type="number" min="0" max="30" value={dog.age} onChange={(event) => set('age', Number(event.target.value))} className="gez-input" /></label>
@@ -206,7 +214,7 @@ function DogProfileForm({ copy, locale, initial, onSave, onBack }: { copy: GezCo
             <label className="grid gap-2 text-xs font-bold">Emergency contact<input value={dog.emergency} onChange={(event) => set('emergency', event.target.value)} className="gez-input" /></label>
             <label className="grid gap-2 text-xs font-bold">Vet<input value={dog.vet} onChange={(event) => set('vet', event.target.value)} className="gez-input" /></label>
             <label className="grid gap-2 text-xs font-bold sm:col-span-2">Special instructions<textarea value={dog.instructions} onChange={(event) => set('instructions', event.target.value)} className="gez-textarea" /></label>
-            <button className="h-13 rounded-full bg-[#31483b] text-sm font-bold text-white sm:col-span-2">{onBack ? t.save : copy.saveDog}</button>
+            <button className="h-13 rounded-full bg-[#31483b] text-sm font-bold text-white transition hover:bg-[#24372d] sm:col-span-2">{submitLabel}</button>
           </form>
         </div>
       </div>
@@ -261,6 +269,7 @@ function LiveMap({ progress }: { progress: number }) {
 export function AppPrototype({ copy, locale, onLocaleChange, onExit }: AppPrototypeProps) {
   const [gate, setGate] = useState<Gate>('phone');
   const [dog, setDog] = useState<GezDog | null>(null);
+  const [dogDraft, setDogDraft] = useState<GezDog | null>(null);
   const [tab, setTab] = useState<AppTab>('home');
   const [editingDog, setEditingDog] = useState(false);
   const [district, setDistrict] = useState<District | 'All'>('All');
@@ -298,6 +307,7 @@ export function AppPrototype({ copy, locale, onLocaleChange, onExit }: AppProtot
 
   const saveDog = (nextDog: GezDog) => {
     setDog(nextDog);
+    setDogDraft(null);
     window.localStorage.setItem('gez-dog', JSON.stringify(toPersistedDog(nextDog)));
     setEditingDog(false);
     setGate('app');
@@ -318,7 +328,26 @@ export function AppPrototype({ copy, locale, onLocaleChange, onExit }: AppProtot
   };
 
   if (gate === 'phone') return <SignInGate copy={copy} onComplete={finishSignIn} onBack={onExit} />;
-  if (gate === 'dog' || editingDog) return <DogProfileForm copy={copy} locale={locale} initial={dog ?? defaultDog} onSave={saveDog} onBack={editingDog ? () => setEditingDog(false) : undefined} />;
+  if (gate === 'dog' || editingDog) {
+    return (
+      <DogProfileForm
+        copy={copy}
+        locale={locale}
+        initial={editingDog ? dog ?? defaultDog : dogDraft ?? dog ?? defaultDog}
+        onSave={saveDog}
+        onBack={(draft) => {
+          if (editingDog) {
+            setEditingDog(false);
+            return;
+          }
+          setDogDraft(draft);
+          setGate('phone');
+        }}
+        backLabel={editingDog ? t.backToDog : t.backToSignIn}
+        submitLabel={editingDog ? t.save : copy.saveDog}
+      />
+    );
+  }
 
   if (status && status !== 'walking' && status !== 'completed') {
     return (
@@ -350,7 +379,7 @@ export function AppPrototype({ copy, locale, onLocaleChange, onExit }: AppProtot
             <div><h1 className="font-display mb-6 text-4xl font-medium tracking-[-0.045em] sm:text-6xl">{copy.liveTitle}</h1><LiveMap progress={routeProgress} /></div>
             <aside className="flex flex-col gap-4 lg:pt-24">
               <div className="rounded-[26px] border border-[#ddd7cc] bg-[#fffaf1] p-5"><p className="text-[0.65rem] font-bold uppercase tracking-[0.16em] text-[#858e87]">{t.route}</p><div className="mt-5 space-y-5">{[[Check, 'Walk started', '18:31'], [CloudSun, t.water, '18:49'], [Plus, t.photo, '18:55'], [Navigation, t.heading, routeProgress > 65 ? 'Now' : 'Soon']].map(([Icon, label, value], index) => { const IconComponent = Icon as typeof Check; return <div key={String(label)} className={`flex gap-3 ${routeProgress < 35 && index > 1 ? 'opacity-35' : ''}`}><span className="grid size-8 shrink-0 place-items-center rounded-full bg-[#e5ebdf]"><IconComponent className="size-3.5" /></span><div className="flex-1"><strong className="block text-sm">{String(label)}</strong><span className="text-[0.65rem] text-[#8a928c]">{String(value)}</span></div></div>; })}</div></div>
-              <div className={`overflow-hidden rounded-[26px] border border-[#ddd7cc] bg-[#fffaf1] transition ${routeProgress > 35 ? 'opacity-100' : 'opacity-40'}`}><img src="https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&w=800&q=82" alt="Milo enjoying a walk" className="aspect-[1.65] w-full object-cover" /><p className="p-4 text-sm leading-6">Milo found his favorite shady corner. He had some water and is doing great.</p></div>
+              <div className={`overflow-hidden rounded-[26px] border border-[#ddd7cc] bg-[#fffaf1] transition ${routeProgress > 35 ? 'opacity-100' : 'opacity-40'}`}><img src="./gez-milo-3d.webp" alt="Milo enjoying a walk" className="aspect-[1.65] w-full object-cover" /><p className="p-4 text-sm leading-6">Milo found his favorite shady corner. He had some water and is doing great.</p></div>
               <button onClick={() => routeProgress >= 82 ? setStatus('completed') : setRouteProgress((value) => Math.min(85, value + 28))} className="h-13 rounded-full bg-[#31483b] text-sm font-bold text-white">{routeProgress >= 82 ? 'Finish walk' : 'Next route update'}</button>
               <div className="grid grid-cols-2 gap-2"><button className="h-12 rounded-full border border-[#d8d3c7] text-xs font-bold"><MessageCircle className="mr-2 inline size-4" />{t.message}</button><button className="h-12 rounded-full border border-[#d8d3c7] text-xs font-bold"><Phone className="mr-2 inline size-4" />{t.urgent}</button></div>
             </aside>
@@ -394,7 +423,7 @@ export function AppPrototype({ copy, locale, onLocaleChange, onExit }: AppProtot
 
         {tab === 'home' && (
           <section className="grid gap-5 lg:grid-cols-[1.25fr_.75fr]">
-            <div className="relative min-h-[430px] overflow-hidden rounded-[34px] bg-[#31483b] p-7 text-white sm:p-10"><div className="relative z-10 max-w-lg"><span className="flex items-center gap-2 text-xs font-bold text-[#cad6c1]"><span className="size-2 rounded-full bg-[#b9ccab]" /> Home now</span><h2 className="font-display mt-7 text-5xl font-medium leading-[1.03] tracking-[-0.05em] sm:text-6xl">{t.okay}</h2><p className="mt-5 max-w-md text-sm leading-6 text-white/60">His last walk ended at 17:12. Water, route and Nigar’s note are saved in Activity.</p><button onClick={() => setTab('walk')} className="mt-8 h-13 rounded-full bg-[#f6f1e7] px-6 text-sm font-bold text-[#31483b]">{copy.findWalker}<ArrowRight className="ml-2 inline size-4" /></button></div><img src="https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&w=900&q=80" alt="Milo at home" className="absolute bottom-[-14%] right-[-5%] hidden h-[78%] w-[48%] rotate-3 rounded-[40%] object-cover opacity-90 sm:block" /></div>
+            <div className="relative min-h-[430px] overflow-hidden rounded-[34px] bg-[#31483b] p-7 text-white sm:p-10"><div className="relative z-10 max-w-lg"><span className="flex items-center gap-2 text-xs font-bold text-[#cad6c1]"><span className="size-2 rounded-full bg-[#b9ccab]" /> Home now</span><h2 className="font-display mt-7 text-5xl font-medium leading-[1.03] tracking-[-0.05em] sm:text-6xl">{t.okay}</h2><p className="mt-5 max-w-md text-sm leading-6 text-white/60">His last walk ended at 17:12. Water, route and Nigar’s note are saved in Activity.</p><button onClick={() => setTab('walk')} className="mt-8 h-13 rounded-full bg-[#f6f1e7] px-6 text-sm font-bold text-[#31483b]">{copy.findWalker}<ArrowRight className="ml-2 inline size-4" /></button></div><img src="./gez-milo-3d.webp" alt="Milo at home" className="absolute bottom-[-14%] right-[-5%] hidden h-[78%] w-[48%] rotate-3 rounded-[40%] object-cover opacity-90 sm:block" /></div>
             <div className="grid gap-5"><div className="rounded-[28px] border border-[#ddd7cc] bg-[#fffaf1] p-6"><div className="flex items-center justify-between"><p className="text-xs font-bold text-[#7c867f]">{t.conditions}</p><CloudSun className="size-5 text-[#7a8f74]" /></div><p className="font-display mt-5 text-5xl">28°C</p><p className="mt-2 text-sm text-[#68736c]">{getWalkConditions(28).message[locale]}</p></div><div className="rounded-[28px] border border-[#ddd7cc] bg-[#e7e2d7] p-6"><p className="text-xs font-bold text-[#7c867f]">{t.favorite}</p><div className="mt-5 flex items-center gap-4"><img src={gezWalkers[0].portrait} alt="Nigar" className="size-14 rounded-full object-cover" /><div><strong className="block">Nigar M.</strong><span className="text-xs text-[#778078]">★ 4.9 · Yasamal</span></div></div><button onClick={() => { setSelectedWalker(gezWalkers[0]); setBookingOpen(true); }} className="mt-5 w-full rounded-full border border-[#c9c4b9] py-3 text-xs font-bold">{copy.bookAgain}</button></div></div>
           </section>
         )}
@@ -421,7 +450,7 @@ export function AppPrototype({ copy, locale, onLocaleChange, onExit }: AppProtot
         )}
 
         {tab === 'dog' && dog && (
-          <section className="grid gap-5 lg:grid-cols-[.7fr_1.3fr]"><div className="overflow-hidden rounded-[30px] border border-[#ddd7cc] bg-[#fffaf1]"><img src="https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&w=900&q=82" alt="Milo" className="aspect-[1.2] w-full object-cover" /><div className="p-6"><h2 className="text-2xl font-bold">{dog.name}</h2><p className="mt-1 text-sm text-[#778078]">{dog.breed} · {dog.age} years · {dog.weight} kg</p><div className="mt-4 flex flex-wrap gap-2">{['Friendly', 'Active', 'Loves people'].map((item) => <span key={item} className="rounded-full bg-[#e7ecdf] px-3 py-1.5 text-xs font-semibold">{item}</span>)}</div></div></div><div className="grid gap-4 sm:grid-cols-2"><div className="rounded-[26px] border border-[#ddd7cc] bg-[#fffaf1] p-5"><p className="text-xs font-bold text-[#818a83]">Behavior</p><dl className="mt-4 space-y-3 text-sm"><div className="flex justify-between"><dt>Dogs</dt><dd>{dog.friendlyDogs ? 'Friendly' : 'Needs space'}</dd></div><div className="flex justify-between"><dt>Leash</dt><dd>{dog.pulls ? 'Pulls' : 'Walks calmly'}</dd></div><div className="flex justify-between"><dt>Treats</dt><dd>{dog.treats ? 'Yes' : 'No'}</dd></div></dl></div><div className="rounded-[26px] border border-[#ddd7cc] bg-[#fffaf1] p-5"><p className="text-xs font-bold text-[#818a83]">Care</p><p className="mt-4 text-sm leading-6">{dog.instructions}</p></div><div className="rounded-[26px] border border-[#ddd7cc] bg-[#fffaf1] p-5 sm:col-span-2"><p className="text-xs font-bold text-[#818a83]">Emergency & vet</p><div className="mt-4 grid gap-3 text-sm sm:grid-cols-2"><p>{dog.emergency}</p><p>{dog.vet}</p></div></div></div></section>
+          <section className="grid gap-5 lg:grid-cols-[.7fr_1.3fr]"><div className="overflow-hidden rounded-[30px] border border-[#ddd7cc] bg-[#fffaf1]"><img src="./gez-milo-3d.webp" alt="Milo" className="aspect-[1.2] w-full object-cover" /><div className="p-6"><h2 className="text-2xl font-bold">{dog.name}</h2><p className="mt-1 text-sm text-[#778078]">{dog.breed} · {dog.age} years · {dog.weight} kg</p><div className="mt-4 flex flex-wrap gap-2">{['Friendly', 'Active', 'Loves people'].map((item) => <span key={item} className="rounded-full bg-[#e7ecdf] px-3 py-1.5 text-xs font-semibold">{item}</span>)}</div></div></div><div className="grid gap-4 sm:grid-cols-2"><div className="rounded-[26px] border border-[#ddd7cc] bg-[#fffaf1] p-5"><p className="text-xs font-bold text-[#818a83]">Behavior</p><dl className="mt-4 space-y-3 text-sm"><div className="flex justify-between"><dt>Dogs</dt><dd>{dog.friendlyDogs ? 'Friendly' : 'Needs space'}</dd></div><div className="flex justify-between"><dt>Leash</dt><dd>{dog.pulls ? 'Pulls' : 'Walks calmly'}</dd></div><div className="flex justify-between"><dt>Treats</dt><dd>{dog.treats ? 'Yes' : 'No'}</dd></div></dl></div><div className="rounded-[26px] border border-[#ddd7cc] bg-[#fffaf1] p-5"><p className="text-xs font-bold text-[#818a83]">Care</p><p className="mt-4 text-sm leading-6">{dog.instructions}</p></div><div className="rounded-[26px] border border-[#ddd7cc] bg-[#fffaf1] p-5 sm:col-span-2"><p className="text-xs font-bold text-[#818a83]">Emergency & vet</p><div className="mt-4 grid gap-3 text-sm sm:grid-cols-2"><p>{dog.emergency}</p><p>{dog.vet}</p></div></div></div></section>
         )}
 
         {tab === 'profile' && (
@@ -443,7 +472,7 @@ export function AppPrototype({ copy, locale, onLocaleChange, onExit }: AppProtot
         <div className="fixed inset-0 z-[60] flex items-end justify-center bg-[#26362e]/45 p-0 backdrop-blur-sm sm:items-center sm:p-6" onClick={() => setBookingOpen(false)}>
           <section className="w-full max-w-[620px] rounded-t-[34px] bg-[#fffaf1] p-6 sm:rounded-[34px] sm:p-8" onClick={(event) => event.stopPropagation()}>
             <div className="flex items-center justify-between"><h2 className="font-display text-4xl font-medium tracking-[-0.045em]">{t.summary}</h2><button onClick={() => setBookingOpen(false)} className="grid size-10 place-items-center rounded-full border border-[#ddd7cc]"><X className="size-4" /></button></div>
-            <div className="mt-7 flex items-center justify-between rounded-[24px] bg-[#ece7dc] p-4"><div className="flex items-center gap-3"><img src="https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&w=200&q=80" alt="Milo" className="size-12 rounded-full object-cover" /><strong>Milo</strong></div><span className="text-xs text-[#7e8780]">{t.with}</span><div className="flex items-center gap-3"><strong>{selectedWalker.name}</strong><img src={selectedWalker.portrait} alt={selectedWalker.name} className="size-12 rounded-full object-cover" /></div></div>
+            <div className="mt-7 flex items-center justify-between rounded-[24px] bg-[#ece7dc] p-4"><div className="flex items-center gap-3"><img src="./gez-milo-3d.webp" alt="Milo" className="size-12 rounded-full object-cover" /><strong>Milo</strong></div><span className="text-xs text-[#7e8780]">{t.with}</span><div className="flex items-center gap-3"><strong>{selectedWalker.name}</strong><img src={selectedWalker.portrait} alt={selectedWalker.name} className="size-12 rounded-full object-cover" /></div></div>
             <dl className="mt-5 grid grid-cols-2 gap-4 border-y border-[#e0dbd1] py-5 text-sm sm:grid-cols-4"><div><dt className="text-xs text-[#89918b]">Date</dt><dd className="mt-1 font-bold">{day}</dd></div><div><dt className="text-xs text-[#89918b]">Time</dt><dd className="mt-1 font-bold">{time}</dd></div><div><dt className="text-xs text-[#89918b]">Duration</dt><dd className="mt-1 font-bold">{duration} min</dd></div><div><dt className="text-xs text-[#89918b]">Total</dt><dd className="mt-1 font-bold">{priceForDuration(selectedWalker.price45, duration)} AZN</dd></div></dl>
             <div className="mt-5 grid gap-3"><input placeholder={t.apartment} defaultValue="Building 12, entrance B, floor 4" className="gez-input" /><input placeholder={t.pickup} defaultValue="Call from the courtyard; I will bring Milo down." className="gez-input" /><textarea placeholder={t.special} defaultValue={dog?.instructions} className="gez-textarea" /></div>
             <div className={`mt-4 rounded-2xl p-4 text-xs ${conditions.level === 'hot' ? 'bg-[#f3e0d4]' : 'bg-[#e6eddf]'}`}><strong>{conditions.temperature}°C · {t.conditions}</strong><p className="mt-1 text-[#657068]">{conditions.message[locale]}</p></div>

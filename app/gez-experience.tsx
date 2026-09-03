@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { AppPrototype } from '@/components/gez/app-prototype';
 import { MarketingHome } from '@/components/gez/marketing-home';
 import { getGezCopy, type GezLocale } from '@/lib/gez-prototype';
@@ -21,6 +21,15 @@ export function GezExperience() {
   const [inApp, setInApp] = useState(false);
   const copy = getGezCopy(locale);
 
+  const openApp = useCallback(() => {
+    const currentState = (window.history.state ?? {}) as { gezView?: 'home' | 'app' };
+    if (currentState.gezView !== 'app') {
+      window.history.pushState({ ...currentState, gezView: 'app' }, '', window.location.href);
+    }
+    setInApp(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
   useEffect(() => {
     queueMicrotask(() => {
       const savedLocale = window.localStorage.getItem('gez-locale');
@@ -32,6 +41,24 @@ export function GezExperience() {
     document.documentElement.lang = locale;
     window.localStorage.setItem('gez-locale', locale);
   }, [locale]);
+
+  useEffect(() => {
+    const currentState = (window.history.state ?? {}) as { gezView?: 'home' | 'app' };
+    if (!currentState.gezView) {
+      window.history.replaceState({ ...currentState, gezView: 'home' }, '', window.location.href);
+    } else {
+      queueMicrotask(() => setInApp(currentState.gezView === 'app'));
+    }
+
+    const handlePopState = (event: PopStateEvent) => {
+      const nextState = (event.state ?? {}) as { gezView?: 'home' | 'app' };
+      setInApp(nextState.gezView === 'app');
+      window.scrollTo({ top: 0 });
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   useEffect(() => {
     const context = (document as Document & { modelContext?: WebMcpContext }).modelContext;
@@ -54,22 +81,21 @@ export function GezExperience() {
           throw new Error('locale must be az, en, or ru');
         }
         if (requested) setLocale(requested);
-        setInApp(true);
-        window.scrollTo({ top: 0 });
+        openApp();
         return { view: 'walk-booking-demo', locale: requested ?? locale };
       },
     }, { signal: lifecycle.signal });
 
     void Promise.resolve(registration).catch(() => undefined);
     return () => lifecycle.abort();
-  }, [locale]);
-
-  const openApp = () => {
-    setInApp(true);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  }, [locale, openApp]);
 
   const closeApp = () => {
+    const currentState = (window.history.state ?? {}) as { gezView?: 'home' | 'app' };
+    if (currentState.gezView === 'app') {
+      window.history.back();
+      return;
+    }
     setInApp(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
