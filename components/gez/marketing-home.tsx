@@ -167,17 +167,20 @@ export function MarketingHome({ copy, locale, onLocaleChange, onStart }: Marketi
         </div>
       </section>
 
-      <section id="how" className="border-y border-[#ded8cc] bg-[#fbf7ef] px-5 py-24 sm:px-8 lg:px-12">
-        <div className="mx-auto max-w-[1320px]">
+      <section id="how" className="gez-care-section relative isolate overflow-hidden border-y border-[#ded8cc] bg-[#fbf7ef] px-5 pb-44 pt-20 sm:px-8 sm:pb-56 lg:px-12 lg:pt-24">
+        <div className="pointer-events-none absolute -bottom-16 -right-14 z-0 w-56 sm:-right-8 sm:w-72 lg:right-8 lg:w-80" aria-hidden="true">
+          <img src="./gez-paw-high-five.png" alt="" width="1254" height="1254" loading="lazy" decoding="async" className="gez-paw-sway w-full rotate-[-18deg]" />
+        </div>
+        <div className="relative z-10 mx-auto max-w-[1320px]">
           <div className="grid gap-6 lg:grid-cols-[.9fr_1.1fr] lg:items-end">
             <h2 className="font-display max-w-[700px] text-5xl font-medium leading-[1.02] tracking-[-0.05em] sm:text-7xl">{copy.howTitle}</h2>
             <p className="max-w-[520px] text-base leading-7 text-[#68736c] lg:justify-self-end">{copy.howBody}</p>
           </div>
-          <div className="mt-16 grid border-t border-[#d8d3c7] md:grid-cols-3">
+          <div className="gez-depth-grid mt-12 grid gap-4 md:grid-cols-3">
             {local.steps.map((step, index) => (
-              <article key={step} className="group border-b border-[#d8d3c7] py-8 md:border-b-0 md:border-r md:px-8 md:first:pl-0 md:last:border-r-0">
-                <span className="text-xs font-bold text-[#e17755]">0{index + 1}</span>
-                <h3 className="mt-10 text-xl font-bold tracking-[-0.025em]">{step}</h3>
+              <article key={step} className="gez-depth-card group rounded-[28px] border border-[#ded8cc] bg-[#f6f1e7] p-7 lg:p-8">
+                <span className="inline-grid size-11 place-items-center rounded-2xl border border-[#e4d6c6] bg-[#fffaf1] text-xs font-bold text-[#b96c4e]">0{index + 1}</span>
+                <h3 className="mt-8 text-xl font-bold tracking-[-0.025em]">{step}</h3>
                 <p className="mt-3 max-w-xs text-sm leading-6 text-[#707a73]">{local.stepCopy[index]}</p>
                 <ArrowRight className="mt-8 size-5 text-[#8ba083] transition group-hover:translate-x-1" />
               </article>
@@ -186,16 +189,19 @@ export function MarketingHome({ copy, locale, onLocaleChange, onStart }: Marketi
         </div>
       </section>
 
-      <section id="trust" className="bg-[#31483b] px-5 py-24 text-[#fbf7ef] sm:px-8 lg:px-12">
-        <div className="mx-auto grid max-w-[1320px] gap-14 lg:grid-cols-[.92fr_1.08fr]">
+      <section id="trust" className="relative bg-[#31483b] px-5 py-20 text-[#fbf7ef] sm:px-8 lg:px-12 lg:py-24">
+        <div className="mx-auto grid max-w-[1320px] items-center gap-10 lg:grid-cols-[1.08fr_.92fr] lg:gap-16">
           <div>
             <p className="text-[0.67rem] font-bold uppercase tracking-[0.2em] text-[#b9c7ac]">{copy.trustEyebrow}</p>
             <h2 className="font-display mt-5 max-w-[600px] text-5xl font-medium leading-[1.02] tracking-[-0.05em] sm:text-7xl">{copy.trustTitle}</h2>
             <p className="mt-7 max-w-lg text-base leading-7 text-white/60">{copy.trustBody}</p>
+            <div className="gez-trust-scene mt-9 overflow-hidden rounded-[30px] border border-white/15 bg-[#d7c7ae]">
+              <img src="./gez-dog-care-3d.webp" alt="A golden retriever placing its paw in a caring hand, with a miniature Baku behind it" width="1536" height="1024" loading="lazy" decoding="async" className="aspect-[1.5] w-full object-cover object-left" />
+            </div>
           </div>
-          <ol className="grid self-end border-t border-white/15 sm:grid-cols-2">
+          <ol className="grid border-t border-white/15 sm:grid-cols-2 lg:grid-cols-1">
             {local.trust.map((item, index) => (
-              <li key={item} className="flex items-center gap-4 border-b border-white/15 py-5 sm:odd:border-r sm:odd:pr-6 sm:even:pl-6">
+              <li key={item} className="gez-trust-step flex items-center gap-4 border-b border-white/15 py-5 sm:odd:border-r sm:odd:pr-6 sm:even:pl-6 lg:py-7 lg:odd:border-r-0 lg:even:pl-0">
                 <span className="grid size-8 shrink-0 place-items-center rounded-full bg-[#b8c7a5]/15 text-xs font-bold text-[#cad5bf]">{index + 1}</span>
                 <span className="text-sm font-semibold">{item}</span>
               </li>
@@ -204,8 +210,9 @@ export function MarketingHome({ copy, locale, onLocaleChange, onStart }: Marketi
         </div>
       </section>
 
-      <section id="become" className="bg-[#f6f1e7] px-5 py-24 sm:px-8 lg:px-12">
-        <div className="mx-auto grid max-w-[1200px] overflow-hidden rounded-[42px] border border-[#d8d3c7] bg-[#ebe5d8] lg:grid-cols-[1fr_.9fr]">
+      <section id="become" className="relative isolate overflow-hidden bg-[#f6f1e7] px-5 py-24 sm:px-8 lg:px-12">
+        <img src="./gez-paw-high-five.png" alt="" aria-hidden="true" width="1254" height="1254" loading="lazy" decoding="async" className="pointer-events-none absolute -left-24 top-2 z-0 w-64 rotate-[35deg] opacity-30 sm:-left-20 sm:top-0 sm:w-80" />
+        <div className="relative z-10 mx-auto grid max-w-[1200px] overflow-hidden rounded-[42px] border border-[#d8d3c7] bg-[#ebe5d8] lg:grid-cols-[1fr_.9fr]">
           <div className="p-8 sm:p-12 lg:p-16">
             <span className="inline-flex size-11 items-center justify-center rounded-full bg-[#31483b] text-white"><ShieldCheck className="size-5" /></span>
             <h2 className="font-display mt-8 text-5xl font-medium leading-[1.02] tracking-[-0.05em] sm:text-6xl">{copy.walkerTitle}</h2>

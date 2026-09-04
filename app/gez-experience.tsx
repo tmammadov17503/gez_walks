@@ -18,6 +18,7 @@ type WebMcpContext = {
 
 export function GezExperience() {
   const [locale, setLocale] = useState<GezLocale>('en');
+  const [localeReady, setLocaleReady] = useState(false);
   const [inApp, setInApp] = useState(false);
   const copy = getGezCopy(locale);
 
@@ -31,16 +32,21 @@ export function GezExperience() {
   }, []);
 
   useEffect(() => {
+    let savedLocale: string | null = null;
+    try { savedLocale = window.localStorage.getItem('gez-locale'); }
+    catch { /* The current visit can still use the language selector. */ }
     queueMicrotask(() => {
-      const savedLocale = window.localStorage.getItem('gez-locale');
       if (savedLocale === 'az' || savedLocale === 'en' || savedLocale === 'ru') setLocale(savedLocale);
+      setLocaleReady(true);
     });
   }, []);
 
   useEffect(() => {
     document.documentElement.lang = locale;
-    window.localStorage.setItem('gez-locale', locale);
-  }, [locale]);
+    if (!localeReady) return;
+    try { window.localStorage.setItem('gez-locale', locale); }
+    catch { /* Language changes remain available without device storage. */ }
+  }, [locale, localeReady]);
 
   useEffect(() => {
     const currentState = (window.history.state ?? {}) as { gezView?: 'home' | 'app' };

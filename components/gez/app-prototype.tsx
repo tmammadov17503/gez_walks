@@ -27,6 +27,8 @@ import {
   X,
 } from 'lucide-react';
 import { GezLogo } from '@/components/gez-logo';
+import { FavoriteButton, FavoriteWalkers, MeetingsPanel, connectionText, useWalkerConnections } from './walker-connections';
+import { WalkerProfile } from './walker-profile';
 import {
   advanceWalkStatus,
   defaultDog,
@@ -233,13 +235,15 @@ function AppNavigation({ tab, setTab, copy }: { tab: AppTab; setTab: (tab: AppTa
   );
 }
 
-function WalkerCard({ walker, duration, onOpen }: { walker: GezWalker; duration: number; onOpen: () => void }) {
+function WalkerCard({ walker, duration, onOpen, favorite, locale, onToggleFavorite }: { walker: GezWalker; duration: number; onOpen: () => void; favorite: boolean; locale: GezLocale; onToggleFavorite: () => void }) {
   return (
-    <article onClick={onOpen} className="group cursor-pointer overflow-hidden rounded-[26px] border border-[#ddd7cc] bg-[#fffaf1] transition hover:-translate-y-1 hover:border-[#aeb9a6]">
+    <article onClick={onOpen} className="group relative cursor-pointer overflow-hidden rounded-[26px] border border-[#ddd7cc] bg-[#fffaf1] transition hover:-translate-y-1 hover:border-[#aeb9a6]">
+      <div className="absolute left-3 top-3 z-10"><FavoriteButton walker={walker} saved={favorite} locale={locale} onToggle={onToggleFavorite} /></div>
       <div className="relative aspect-[1.15] overflow-hidden bg-[#e4dfd4]"><img src={walker.portrait} alt={walker.name} className="h-full w-full object-cover grayscale-[12%] transition duration-500 group-hover:scale-[1.03] group-hover:grayscale-0" /><span className="absolute right-3 top-3 rounded-full bg-[#fffaf1]/90 px-3 py-1.5 text-[0.65rem] font-bold">{walker.district}</span></div>
       <div className="p-5">
         <div className="flex items-start justify-between gap-3"><div><h3 className="flex items-center gap-1.5 text-lg font-bold tracking-[-0.02em]">{walker.name}<BadgeCheck className="size-4 text-[#6f8666]" /></h3><p className="mt-1 text-xs font-semibold text-[#778078]">★ {walker.rating} · {walker.walks} walks</p></div><p className="text-right text-sm font-bold">{priceForDuration(walker.price45, duration)} AZN<span className="block text-[0.6rem] font-medium text-[#879089]">{duration} min</span></p></div>
         <div className="mt-4 flex flex-wrap gap-1.5">{walker.specialties.slice(0, 2).map((tag) => <span key={tag} className="rounded-full bg-[#e8ecdf] px-2.5 py-1 text-[0.62rem] font-semibold text-[#526150]">{tag}</span>)}</div>
+        <button onClick={event => { event.stopPropagation(); onOpen(); }} className="mt-4 flex min-h-11 w-full items-center justify-between rounded-xl border-t border-[#e3ded4] pt-3 text-sm font-semibold">{connectionText[locale].view}<ArrowRight className="size-4" /></button>
       </div>
     </article>
   );
@@ -283,6 +287,8 @@ export function AppPrototype({ copy, locale, onLocaleChange, onExit }: AppProtot
   const [status, setStatus] = useState<WalkStatus | null>(null);
   const [routeProgress, setRouteProgress] = useState(18);
   const [rated, setRated] = useState(0);
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
+  const connections = useWalkerConnections();
   const t = appText[locale];
   const conditions = getWalkConditions(Number(time.split(':')[0]) < 17 ? 33 : 28);
 
@@ -299,8 +305,12 @@ export function AppPrototype({ copy, locale, onLocaleChange, onExit }: AppProtot
     });
   }, []);
 
-  const matches = useMemo(() => filterGezWalkers(gezWalkers, { district, size: dog?.size ?? 'large' }), [district, dog?.size]);
+  const matches = useMemo(() => {
+    const nearby = filterGezWalkers(gezWalkers, { district, size: dog?.size ?? 'large' });
+    return favoritesOnly ? nearby.filter(walker => connections.favorites.includes(walker.id)) : nearby;
+  }, [district, dog?.size, favoritesOnly, connections.favorites]);
   const currentWalker = selectedWalker ?? gezWalkers[0];
+  const canBook = currentWalker.acceptedSizes.includes(dog?.size ?? 'large');
 
   const finishSignIn = () => {
     window.localStorage.setItem('gez-auth', 'true');
@@ -317,6 +327,7 @@ export function AppPrototype({ copy, locale, onLocaleChange, onExit }: AppProtot
   };
 
   const requestWalk = () => {
+    if (!canBook) return;
     setBookingOpen(false);
     setSelectedWalker(currentWalker);
     setStatus('requested');
@@ -422,11 +433,13 @@ export function AppPrototype({ copy, locale, onLocaleChange, onExit }: AppProtot
       </header>
       <div className="mx-auto max-w-[1380px] px-5 py-8 sm:px-8 lg:py-11">
         <div className="mb-8 flex items-end justify-between gap-4"><div><p className="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-[#8a938c]">GƏZ · Baku pilot</p><h1 className="font-display mt-2 text-4xl font-medium tracking-[-0.045em] sm:text-6xl">{screenTitle}</h1></div>{tab === 'dog' && <button onClick={() => setEditingDog(true)} className="rounded-full border border-[#d8d3c7] px-4 py-2.5 text-xs font-bold"><Edit3 className="mr-2 inline size-3.5" />{t.editDog}</button>}</div>
+        {connections.storageUnavailable && <output className="mb-5 block rounded-2xl bg-[#f3e3d3] p-4 text-sm text-[#7d5039]">{connectionText[locale].storage}</output>}
+        {(tab === 'home' || tab === 'activity') && <MeetingsPanel meetings={connections.meetings} locale={locale} onOpen={setSelectedWalker} onCancel={connections.cancel} />}
 
         {tab === 'home' && (
           <section className="grid gap-5 lg:grid-cols-[1.25fr_.75fr]">
             <div className="relative min-h-[430px] overflow-hidden rounded-[34px] bg-[#31483b] p-7 text-white sm:p-10"><div className="relative z-10 max-w-lg"><span className="flex items-center gap-2 text-xs font-bold text-[#cad6c1]"><span className="size-2 rounded-full bg-[#b9ccab]" /> Home now</span><h2 className="font-display mt-7 text-5xl font-medium leading-[1.03] tracking-[-0.05em] sm:text-6xl">{t.okay}</h2><p className="mt-5 max-w-md text-sm leading-6 text-white/60">His last walk ended at 17:12. Water, route and Nigar’s note are saved in Activity.</p><button onClick={() => setTab('walk')} className="mt-8 h-13 rounded-full bg-[#f6f1e7] px-6 text-sm font-bold text-[#31483b]">{copy.findWalker}<ArrowRight className="ml-2 inline size-4" /></button></div><img src="./gez-milo-3d.webp" alt="Milo at home" className="absolute bottom-[-14%] right-[-5%] hidden h-[78%] w-[48%] rotate-3 rounded-[40%] object-cover opacity-90 sm:block" /></div>
-            <div className="grid gap-5"><div className="rounded-[28px] border border-[#ddd7cc] bg-[#fffaf1] p-6"><div className="flex items-center justify-between"><p className="text-xs font-bold text-[#7c867f]">{t.conditions}</p><CloudSun className="size-5 text-[#7a8f74]" /></div><p className="font-display mt-5 text-5xl">28°C</p><p className="mt-2 text-sm text-[#68736c]">{getWalkConditions(28).message[locale]}</p></div><div className="rounded-[28px] border border-[#ddd7cc] bg-[#e7e2d7] p-6"><p className="text-xs font-bold text-[#7c867f]">{t.favorite}</p><div className="mt-5 flex items-center gap-4"><img src={gezWalkers[0].portrait} alt="Nigar" className="size-14 rounded-full object-cover" /><div><strong className="block">Nigar M.</strong><span className="text-xs text-[#778078]">★ 4.9 · Yasamal</span></div></div><button onClick={() => { setSelectedWalker(gezWalkers[0]); setBookingOpen(true); }} className="mt-5 w-full rounded-full border border-[#c9c4b9] py-3 text-xs font-bold">{copy.bookAgain}</button></div></div>
+            <div className="grid gap-5"><div className="rounded-[28px] border border-[#ddd7cc] bg-[#fffaf1] p-6"><div className="flex items-center justify-between"><p className="text-xs font-bold text-[#7c867f]">{t.conditions}</p><CloudSun className="size-5 text-[#7a8f74]" /></div><p className="font-display mt-5 text-5xl">28°C</p><p className="mt-2 text-sm text-[#68736c]">{getWalkConditions(28).message[locale]}</p></div><FavoriteWalkers ids={connections.favorites} locale={locale} onOpen={setSelectedWalker} onBrowse={() => { setFavoritesOnly(false); setTab('walk'); }} /></div>
           </section>
         )}
 
@@ -440,7 +453,8 @@ export function AppPrototype({ copy, locale, onLocaleChange, onExit }: AppProtot
             </div>
             <div className={`mt-4 flex items-start gap-3 rounded-[22px] border p-4 ${conditions.level === 'hot' ? 'border-[#e1b59e] bg-[#f3e0d4]' : 'border-[#cbd6c4] bg-[#e6eddf]'}`}><CloudSun className="mt-0.5 size-5" /><div><strong className="text-sm">{conditions.temperature}°C · {conditions.level === 'hot' ? 'Hot pavement risk' : 'Comfortable'}</strong><p className="mt-1 text-xs leading-5 text-[#667068]">{conditions.message[locale]}</p></div></div>
             <div className="mt-8 flex items-center justify-between"><h2 className="text-xl font-bold">{copy.nearby}</h2><span className="text-xs text-[#78827b]">{matches.length} {t.available}</span></div>
-            {matches.length ? <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{matches.map((walker) => <WalkerCard key={walker.id} walker={walker} duration={duration} onOpen={() => setSelectedWalker(walker)} />)}</div> : <div className="mt-5 rounded-[28px] border border-dashed border-[#cec8bb] p-12 text-center text-sm text-[#707a72]">{t.noMatch}</div>}
+            <div className="mt-4"><button aria-pressed={favoritesOnly} onClick={() => setFavoritesOnly(value => !value)} className={`inline-flex min-h-11 items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold ${favoritesOnly ? 'border-[#31483b] bg-[#31483b] text-white' : 'border-[#cbd1c0] bg-[#fffaf1] text-[#52694c]'}`}><Heart className="size-4" />{connectionText[locale].only}</button></div>
+            {matches.length ? <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{matches.map(walker => <WalkerCard key={walker.id} walker={walker} duration={duration} onOpen={() => setSelectedWalker(walker)} favorite={connections.favorites.includes(walker.id)} locale={locale} onToggleFavorite={() => connections.toggle(walker.id)} />)}</div> : <div className="mt-5 rounded-[28px] border border-dashed border-[#cec8bb] p-8 text-center text-sm text-[#707a72]">{favoritesOnly ? connectionText[locale].emptyHint : t.noMatch}</div>}
           </section>
         )}
 
@@ -463,11 +477,7 @@ export function AppPrototype({ copy, locale, onLocaleChange, onExit }: AppProtot
       <div className="lg:hidden"><AppNavigation tab={tab} setTab={setTab} copy={copy} /></div>
 
       {selectedWalker && !bookingOpen && (
-        <div className="gez-walker-overlay fixed inset-0 z-50 overflow-y-auto bg-[#26362e]/45 p-3 backdrop-blur-sm sm:p-6" onClick={() => setSelectedWalker(null)}>
-          <section className="mx-auto my-4 max-w-[980px] overflow-hidden rounded-[34px] bg-[#fffaf1]" onClick={(event) => event.stopPropagation()}>
-            <div className="relative grid lg:grid-cols-[.85fr_1.15fr]"><img src={selectedWalker.portrait} alt={selectedWalker.name} className="h-[min(360px,48dvh)] min-h-[240px] w-full object-cover lg:h-full" /><button onClick={() => setSelectedWalker(null)} aria-label="Close walker profile" className="absolute right-4 top-4 grid size-11 place-items-center rounded-full bg-[#fffaf1]"><X className="size-4" /></button><div className="p-6 sm:p-10"><p className="text-[0.65rem] font-bold uppercase tracking-[0.16em] text-[#7d887f]">{selectedWalker.district}</p><h2 className="font-display mt-3 text-4xl font-medium tracking-[-0.05em] sm:text-5xl">{selectedWalker.name}</h2><p className="mt-3 text-sm font-bold">{selectedWalker.rating} ★ · {selectedWalker.walks} walks</p><p className="mt-6 text-sm leading-7 text-[#68736c]">{selectedWalker.about}</p><div className="mt-7 grid gap-3 sm:grid-cols-2">{selectedWalker.trustTags.map((tag) => <span key={tag} className="flex items-center gap-2 rounded-2xl bg-[#e7ecdf] px-4 py-3 text-xs font-semibold"><CheckCircle2 className="size-4 text-[#687e62]" />{tag}</span>)}</div><dl className="mt-7 grid gap-4 border-y border-[#e0dbd1] py-5 text-sm sm:grid-cols-2"><div><dt className="text-xs text-[#879089]">Availability</dt><dd className="mt-1 font-semibold">{selectedWalker.availability}</dd></div><div><dt className="text-xs text-[#879089]">Languages</dt><dd className="mt-1 font-semibold">{selectedWalker.languages.join(' · ')}</dd></div><div><dt className="text-xs text-[#879089]">Dog sizes</dt><dd className="mt-1 font-semibold capitalize">{selectedWalker.acceptedSizes.join(' · ')}</dd></div><div><dt className="text-xs text-[#879089]">Experience</dt><dd className="mt-1 font-semibold">{selectedWalker.specialties.join(' · ')}</dd></div></dl><div className="mt-6 rounded-2xl bg-[#f0e8da] p-4"><strong className="text-sm">{copy.meetFirst}</strong><p className="mt-1 text-xs leading-5 text-[#6e776f]">{t.freeMeet}</p></div><button onClick={() => setBookingOpen(true)} className="mt-5 h-14 w-full rounded-full bg-[#31483b] text-sm font-bold text-white">{copy.chooseWalker}</button></div></div>
-          </section>
-        </div>
+        <WalkerProfile walker={selectedWalker} locale={locale} copy={copy} favorite={connections.favorites.includes(selectedWalker.id)} compatible={canBook} meeting={connections.meetings.find(meeting => meeting.walkerId === selectedWalker.id)} onToggleFavorite={() => connections.toggle(selectedWalker.id)} onRequestMeeting={connections.request} onCancelMeeting={() => connections.cancel(selectedWalker.id)} onChoose={() => { if (canBook) setBookingOpen(true); }} onClose={() => setSelectedWalker(null)} />
       )}
 
       {bookingOpen && selectedWalker && (
@@ -478,7 +488,8 @@ export function AppPrototype({ copy, locale, onLocaleChange, onExit }: AppProtot
             <dl className="mt-5 grid grid-cols-2 gap-4 border-y border-[#e0dbd1] py-5 text-sm sm:grid-cols-4"><div><dt className="text-xs text-[#89918b]">Date</dt><dd className="mt-1 font-bold">{day}</dd></div><div><dt className="text-xs text-[#89918b]">Time</dt><dd className="mt-1 font-bold">{time}</dd></div><div><dt className="text-xs text-[#89918b]">Duration</dt><dd className="mt-1 font-bold">{duration} min</dd></div><div><dt className="text-xs text-[#89918b]">Total</dt><dd className="mt-1 font-bold">{priceForDuration(selectedWalker.price45, duration)} AZN</dd></div></dl>
             <div className="mt-5 grid gap-3"><input placeholder={t.apartment} defaultValue="Building 12, entrance B, floor 4" className="gez-input" /><input placeholder={t.pickup} defaultValue="Call from the courtyard; I will bring Milo down." className="gez-input" /><textarea placeholder={t.special} defaultValue={dog?.instructions} className="gez-textarea" /></div>
             <div className={`mt-4 rounded-2xl p-4 text-xs ${conditions.level === 'hot' ? 'bg-[#f3e0d4]' : 'bg-[#e6eddf]'}`}><strong>{conditions.temperature}°C · {t.conditions}</strong><p className="mt-1 text-[#657068]">{conditions.message[locale]}</p></div>
-            <button onClick={requestWalk} className="mt-5 h-14 w-full rounded-full bg-[#31483b] text-sm font-bold text-white">{copy.requestWalk}</button>
+            {!canBook && <p className="mt-4 text-sm leading-6 text-[#94614e]">{connectionText[locale].mismatchHint}</p>}
+            <button onClick={requestWalk} disabled={!canBook} className="mt-5 h-14 w-full rounded-full bg-[#31483b] text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50">{canBook ? copy.requestWalk : connectionText[locale].mismatch}</button>
           </dialog>
         </div>
       )}

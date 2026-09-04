@@ -149,6 +149,23 @@
   to { width: 67%; }
 }
 
+@keyframes gez-paw-sway {
+  0%, 100% { transform: translateY(8px) rotate(-18deg); }
+  50% { transform: translateY(-5px) rotate(-14deg); }
+}
+
+.gez-paw-sway { animation: gez-paw-sway 8s ease-in-out infinite; transform-origin: 50% 100%; }
+.gez-depth-grid { perspective: 1200px; }
+.gez-depth-card { transition: transform .45s ease, box-shadow .45s ease, border-color .45s ease; }
+.gez-trust-scene { transform: perspective(1200px) rotateY(3deg); transition: transform .7s ease; }
+.gez-trust-step { transition: transform .3s ease, background-color .3s ease; }
+
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .gez-depth-card:hover { transform: translateY(-6px) rotateX(2deg); border-color: #b6c2ab; box-shadow: 0 18px 30px -24px #31483b66; }
+  .gez-trust-scene:hover { transform: perspective(1200px) rotateY(0deg) translateY(-3px); }
+  .gez-trust-step:hover { transform: translateX(4px); }
+}
+
 .gez-route-line {
   stroke-dasharray: 700;
   animation: gez-route-draw 3.8s 0.5s cubic-bezier(.22,.8,.24,1) both;
@@ -182,6 +199,11 @@
   padding-bottom: max(1.25rem, var(--gez-safe-bottom));
 }
 .gez-live-map { min-height: clamp(20rem, 70dvh, 27.5rem); }
+.gez-walker-dialog {
+  max-height: calc(100dvh - max(2rem, var(--gez-safe-top) + var(--gez-safe-bottom)));
+  max-width: min(980px, calc(100vw - max(2rem, var(--gez-safe-left) + var(--gez-safe-right))));
+  overscroll-behavior: contain;
+}
 
 ::selection { background: #c8d5bd; color: #26362e; }
 
@@ -208,4 +230,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+  .gez-paw-sway, .gez-trust-scene { animation: none; transform: none; }
+  .gez-depth-card, .gez-trust-scene, .gez-trust-step { transition: none; }
 }
