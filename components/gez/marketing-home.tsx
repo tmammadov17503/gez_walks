@@ -8,10 +8,13 @@ import {
   ArrowRight,
   Check,
   Menu,
+  Pause,
+  Play,
   ShieldCheck,
   X,
 } from 'lucide-react';
 import { GezLogo } from '@/components/gez-logo';
+import { planningCopy } from './planning-copy';
 import type { GezCopy, GezLocale } from '@/lib/gez-prototype';
 
 type MarketingHomeProps = {
@@ -60,6 +63,7 @@ const supportingCopy: Record<GezLocale, {
 export function MarketingHome({ copy, locale, onLocaleChange, onStart }: MarketingHomeProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [applied, setApplied] = useState(false);
+  const [motionPaused, setMotionPaused] = useState(false);
   const local = supportingCopy[locale];
 
   const goTo = (id: string) => {
@@ -68,7 +72,7 @@ export function MarketingHome({ copy, locale, onLocaleChange, onStart }: Marketi
   };
 
   return (
-    <main className="min-h-dvh overflow-x-clip bg-[#f6f1e7] text-[#26362e]">
+    <main data-motion={motionPaused ? 'paused' : 'running'} className="min-h-dvh overflow-x-clip bg-[#f6f1e7] text-[#26362e]">
       <header className="gez-safe-top relative z-40 mx-auto flex w-full max-w-[1480px] items-center justify-between px-5 pb-5 sm:px-8 lg:px-12">
         <a href="#top" aria-label="GƏZ home"><GezLogo /></a>
 
@@ -122,6 +126,12 @@ export function MarketingHome({ copy, locale, onLocaleChange, onStart }: Marketi
       )}
 
       <section id="top" className="relative mx-auto grid min-h-[calc(100dvh-5.5rem)] max-w-[1480px] items-center gap-8 px-5 pb-16 pt-8 sm:px-8 lg:min-h-[760px] lg:grid-cols-[.8fr_1.2fr] lg:px-12 lg:pb-24 lg:pt-10">
+        <div className="gez-hero-paws pointer-events-none absolute inset-0 z-[2]" aria-hidden="true">
+          {[0, 1, 2, 3, 4].map(index => <img key={index} src="./gez-paw-high-five.png" alt="" width="1254" height="1254" decoding="async" className="gez-hero-paw absolute" />)}
+        </div>
+        <button type="button" aria-pressed={motionPaused} onClick={() => setMotionPaused(value => !value)} className="gez-motion-control absolute right-5 top-2 z-20 inline-flex min-h-11 items-center gap-2 rounded-full border border-[#d5d0c4] bg-[#fffaf1]/92 px-4 text-xs font-semibold backdrop-blur-sm sm:right-8 lg:right-12" aria-label={motionPaused ? planningCopy[locale].resume : planningCopy[locale].pause}>
+          {motionPaused ? <Play className="size-3.5" /> : <Pause className="size-3.5" />}{motionPaused ? planningCopy[locale].resume : planningCopy[locale].pause}
+        </button>
         <div className="relative z-10 max-w-[610px]">
           <p className="mb-7 flex items-center gap-2 text-[0.68rem] font-bold uppercase tracking-[0.19em] text-[#68756d]">
             <span className="size-1.5 rounded-full bg-[#e68a68]" /> {copy.heroEyebrow}
@@ -141,8 +151,8 @@ export function MarketingHome({ copy, locale, onLocaleChange, onStart }: Marketi
           <p className="mt-10 font-display text-lg italic text-[#56655d]">“{copy.promise}”</p>
         </div>
 
-        <div className="relative min-h-[360px] sm:min-h-[500px] lg:min-h-[650px]">
-          <div className="absolute inset-x-[-7%] top-[3%] h-[92%] overflow-hidden rounded-[52px] bg-[#efe8dc] lg:inset-x-[-4%]">
+        <div className="gez-hero-stage relative z-[1] min-h-[360px] sm:min-h-[500px] lg:min-h-[650px]">
+          <div className="gez-hero-model absolute inset-x-[-7%] top-[3%] h-[92%] overflow-hidden rounded-[52px] bg-[#efe8dc] lg:inset-x-[-4%]">
             <img
               src="./gez-baku-model.png"
               alt="A miniature Baku neighbourhood with a dog walker following a route home"
@@ -154,13 +164,13 @@ export function MarketingHome({ copy, locale, onLocaleChange, onStart }: Marketi
           </div>
           <div className="gez-float-card absolute bottom-[3%] left-[-2%] z-10 max-w-[260px] rounded-[24px] border border-[#ded8cc] bg-[#fffaf1]/95 p-4 backdrop-blur-sm sm:left-[1%] sm:max-w-[300px]">
             <div className="flex items-center justify-between gap-4">
-              <span className="flex items-center gap-2 text-[0.66rem] font-bold uppercase tracking-[0.15em] text-[#657068]"><span className="relative size-2 rounded-full bg-[#8ca27f] before:absolute before:inset-0 before:animate-ping before:rounded-full before:bg-[#8ca27f]" />{local.live}</span>
+              <span className="flex items-center gap-2 text-[0.66rem] font-bold uppercase tracking-[0.15em] text-[#657068]"><span className="relative size-2 rounded-full bg-[#8ca27f]"><span className="gez-live-ping absolute inset-0 animate-ping rounded-full bg-[#8ca27f]" /></span>{local.live}</span>
               <span className="text-xs font-semibold text-[#7b837d]">27 min</span>
             </div>
             <p className="mt-3 text-sm font-bold">{local.place}</p>
             <div className="mt-3 h-1 overflow-hidden rounded-full bg-[#e7e1d6]"><div className="gez-progress h-full w-2/3 rounded-full bg-[#e68a68]" /></div>
           </div>
-          <div className="absolute right-[-1%] top-[5%] z-10 hidden w-[218px] rotate-[2deg] rounded-[24px] border border-[#ded8cc] bg-[#f6f1e7]/95 p-4 sm:block">
+          <div className="gez-update-card absolute right-[-1%] top-[5%] z-10 hidden w-[218px] rounded-[24px] border border-[#ded8cc] bg-[#f6f1e7]/95 p-4 sm:block">
             <p className="text-[0.62rem] font-bold uppercase tracking-[0.16em] text-[#8a938c]">{local.update}</p>
             <p className="mt-3 text-sm font-semibold leading-5">{local.note}</p>
           </div>

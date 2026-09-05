@@ -16,10 +16,12 @@ GƏZ is an Azerbaijani-first dog-walking marketplace prototype for Baku. It help
 - Dog profile creation and editing
 - Six fictional walkers across Baku
 - Date, time, duration and district filters
+- Side-by-side comparison for two walkers, including price, experience and dog-size fit
 - Saved favorite walkers with a favorites-only discovery filter
 - Free meet-and-greet demo requests, with rescheduling and cancellation
 - Walker profiles with dog-size compatibility checks
 - Booking request and status simulation
+- Optional “ready at the door” checklist before the walker arrives
 - Live route, photo update and walk completion report
 - Rating, history and repeat booking
 - Mobile bottom navigation
@@ -28,7 +30,9 @@ No real payments, GPS, OTP delivery, or background-check integration are connect
 
 Favorites and meet-and-greet preferences are saved on the current device only. Meet requests do not send messages or confirm a real walker. Times use Baku time; past times and dates more than 30 days ahead are rejected. Only known walker IDs and the date/time fields are retained. If browser storage is blocked, the UI explains that changes last for the current visit only.
 
-The care and trust sections include restrained 3D paw imagery and hover depth. Decorative images are lazy-loaded, do not intercept input, and motion respects the reduced-motion setting.
+The opening screen, care and trust sections include restrained 3D paw imagery and hover depth. On precise-pointer devices the Baku architectural model and its live cards sit on separate perspective layers; touch devices receive the same composition without unnecessary transforms. Opening-screen motion can be paused, decorative images do not intercept input, and motion respects the reduced-motion setting.
+
+Each requested demo walk freezes the selected walker, dog, schedule, duration and price so that its status, live route, report, rating and repeat booking remain internally consistent. The frozen snapshot excludes medical notes, emergency contacts and pickup instructions. Comparison choices and checklist ticks last only for the current visit.
 
 ## Local development
 
@@ -49,6 +53,7 @@ npm run pages:build
 npm test
 npm run lint
 python tests/verify_gez_features.py
+python tests/verify_gez_planning.py
 python tests/verify_gez_responsive.py
 ```
 

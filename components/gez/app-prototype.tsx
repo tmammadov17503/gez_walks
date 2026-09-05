@@ -27,8 +27,12 @@ import {
   X,
 } from 'lucide-react';
 import { GezLogo } from '@/components/gez-logo';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { FavoriteButton, FavoriteWalkers, MeetingsPanel, connectionText, useWalkerConnections } from './walker-connections';
 import { WalkerProfile } from './walker-profile';
+import { CompareChoice, ComparisonBar, WalkerComparison, WalkPreparation } from './walk-planning';
+import { dogInterfaceCopy, planningCopy } from './planning-copy';
+import { addMinutesToTime, createWalkSnapshot, getWalkMetrics, toggleComparison, walkSessionText, type PreparationItem, type WalkSnapshot } from '@/lib/gez-planning';
 import {
   advanceWalkStatus,
   defaultDog,
@@ -179,6 +183,7 @@ function ToggleRow({ label, value, onChange }: { label: string; value: boolean; 
 function DogProfileForm({ copy, locale, initial, onSave, onBack, backLabel, submitLabel }: { copy: GezCopy; locale: GezLocale; initial: GezDog; onSave: (dog: GezDog) => void; onBack: (draft: GezDog) => void; backLabel: string; submitLabel: string }) {
   const [dog, setDog] = useState(initial);
   const t = appText[locale];
+  const currentDogCopy = dogInterfaceCopy(locale, dog.name);
   const set = <K extends keyof GezDog>(key: K, value: GezDog[K]) => setDog((current) => ({ ...current, [key]: value }));
 
   return (
@@ -193,11 +198,11 @@ function DogProfileForm({ copy, locale, initial, onSave, onBack, backLabel, subm
         <div className="mt-12 grid gap-10 lg:grid-cols-[.7fr_1.3fr]">
           <div className="self-start rounded-[30px] border border-white/60 bg-[#f6f1e7]/72 p-5 backdrop-blur-md lg:border-0 lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
             <div className="relative mx-auto grid size-44 place-items-center overflow-hidden rounded-[44%] bg-[#d8e0ce]">
-              <img src="./gez-milo-3d.webp" alt="Milo the Golden Retriever" className="h-full w-full object-cover" />
+              <img src="./gez-milo-3d.webp" alt={`${dog.name || defaultDog.name} the dog`} className="h-full w-full object-cover" />
               <button className="absolute bottom-3 right-3 grid size-10 place-items-center rounded-full bg-[#fffaf1]"><Edit3 className="size-4" /></button>
             </div>
             <h1 className="font-display mt-8 text-5xl font-medium leading-none tracking-[-0.045em]">{copy.whoWalking}</h1>
-            <p className="mt-5 text-sm leading-6 text-[#717a73]">{t.formNote}</p>
+            <p className="mt-5 text-sm leading-6 text-[#717a73]">{currentDogCopy.formNote}</p>
           </div>
 
           <form onSubmit={(event) => { event.preventDefault(); onSave(dog); }} className="grid gap-5 rounded-[34px] border border-white/75 bg-[#fffaf1]/95 p-5 shadow-[0_24px_80px_rgba(49,72,59,0.12)] backdrop-blur-xl sm:grid-cols-2 sm:p-8">
@@ -235,38 +240,41 @@ function AppNavigation({ tab, setTab, copy }: { tab: AppTab; setTab: (tab: AppTa
   );
 }
 
-function WalkerCard({ walker, duration, onOpen, favorite, locale, onToggleFavorite }: { walker: GezWalker; duration: number; onOpen: () => void; favorite: boolean; locale: GezLocale; onToggleFavorite: () => void }) {
+function WalkerCard({ walker, duration, onOpen, favorite, locale, onToggleFavorite, comparing, comparisonFull, onToggleComparison }: { walker: GezWalker; duration: number; onOpen: () => void; favorite: boolean; locale: GezLocale; onToggleFavorite: () => void; comparing: boolean; comparisonFull: boolean; onToggleComparison: () => void }) {
   return (
-    <article onClick={onOpen} className="group relative cursor-pointer overflow-hidden rounded-[26px] border border-[#ddd7cc] bg-[#fffaf1] transition hover:-translate-y-1 hover:border-[#aeb9a6]">
+    <article className="group relative overflow-hidden rounded-[26px] border border-[#ddd7cc] bg-[#fffaf1] transition hover:-translate-y-1 hover:border-[#aeb9a6]">
       <div className="absolute left-3 top-3 z-10"><FavoriteButton walker={walker} saved={favorite} locale={locale} onToggle={onToggleFavorite} /></div>
       <div className="relative aspect-[1.15] overflow-hidden bg-[#e4dfd4]"><img src={walker.portrait} alt={walker.name} className="h-full w-full object-cover grayscale-[12%] transition duration-500 group-hover:scale-[1.03] group-hover:grayscale-0" /><span className="absolute right-3 top-3 rounded-full bg-[#fffaf1]/90 px-3 py-1.5 text-[0.65rem] font-bold">{walker.district}</span></div>
       <div className="p-5">
         <div className="flex items-start justify-between gap-3"><div><h3 className="flex items-center gap-1.5 text-lg font-bold tracking-[-0.02em]">{walker.name}<BadgeCheck className="size-4 text-[#6f8666]" /></h3><p className="mt-1 text-xs font-semibold text-[#778078]">★ {walker.rating} · {walker.walks} walks</p></div><p className="text-right text-sm font-bold">{priceForDuration(walker.price45, duration)} AZN<span className="block text-[0.6rem] font-medium text-[#879089]">{duration} min</span></p></div>
         <div className="mt-4 flex flex-wrap gap-1.5">{walker.specialties.slice(0, 2).map((tag) => <span key={tag} className="rounded-full bg-[#e8ecdf] px-2.5 py-1 text-[0.62rem] font-semibold text-[#526150]">{tag}</span>)}</div>
+        <CompareChoice walker={walker} checked={comparing} full={comparisonFull} locale={locale} onToggle={onToggleComparison} />
         <button onClick={event => { event.stopPropagation(); onOpen(); }} className="mt-4 flex min-h-11 w-full items-center justify-between rounded-xl border-t border-[#e3ded4] pt-3 text-sm font-semibold">{connectionText[locale].view}<ArrowRight className="size-4" /></button>
       </div>
     </article>
   );
 }
 
-function LiveMap({ progress }: { progress: number }) {
+function LiveMap({ progress, walker, snapshot, locale, completed = false }: { progress: number; walker: GezWalker; snapshot: WalkSnapshot; locale: GezLocale; completed?: boolean }) {
   const dash = 520 - (520 * progress) / 100;
+  const stats = getWalkMetrics(snapshot.duration, completed ? 100 : progress > 35 ? 65 : 45);
+  const mapCopy = walkSessionText(snapshot, locale);
   return (
     <div className="gez-live-map relative overflow-hidden rounded-[32px] bg-[#dce3da]">
       <div className="absolute left-[8%] top-[8%] h-28 w-40 rotate-6 rounded-[22px] bg-[#eee7d8]" />
       <div className="absolute right-[7%] top-[12%] h-36 w-44 -rotate-3 rounded-[22px] bg-[#e9e1d2]" />
       <div className="absolute bottom-[8%] left-[12%] h-40 w-48 rotate-2 rounded-[24px] bg-[#f0e9dc]" />
       <div className="absolute bottom-[14%] right-[9%] size-36 rounded-[45%] bg-[#b7c7ae]" />
-      <svg className="absolute inset-0 h-full w-full" viewBox="0 0 700 560" fill="none" aria-label="Simplified live walking route in Yasamal">
+      <svg className="absolute inset-0 h-full w-full" viewBox="0 0 700 560" fill="none" aria-label={`Simulated walking route in ${walker.district}`}>
         <path d="M-20 300C130 220 183 379 310 315S496 153 720 213" stroke="#f7f2e9" strokeWidth="54" />
         <path d="M255-20c14 115-66 178-27 277 43 109 173 100 175 322" stroke="#f7f2e9" strokeWidth="42" />
         <path d="M79 459c97-67 147-88 231-56 99 38 205-25 281-132" stroke="#80947b" strokeWidth="7" strokeLinecap="round" strokeDasharray="520" strokeDashoffset={dash} className="transition-all duration-700" />
         <circle cx={80 + progress * 4.8} cy={459 - Math.sin(progress / 18) * 105} r="14" fill="#31483b" stroke="#fffaf1" strokeWidth="7" className="transition-all duration-700" />
       </svg>
-      <div className="absolute left-4 top-4 rounded-full bg-[#fffaf1]/90 px-4 py-2 text-xs font-bold backdrop-blur"><span className="mr-2 inline-block size-2 animate-pulse rounded-full bg-[#e17455]" />LIVE · Yasamal</div>
+      {!completed && <div className="absolute left-4 top-4 rounded-full bg-[#fffaf1]/90 px-4 py-2 text-xs font-bold backdrop-blur"><span className="mr-2 inline-block size-2 animate-pulse rounded-full bg-[#e17455]" />{mapCopy.live.toUpperCase()} · {walker.district}</div>}
       <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between rounded-[22px] bg-[#fffaf1]/94 p-4 backdrop-blur">
-        <div className="flex items-center gap-3"><img src={gezWalkers[0].portrait} alt="Nigar" className="size-10 rounded-full object-cover" /><div><strong className="block text-sm">Nigar</strong><span className="text-[0.65rem] text-[#778078]">with Milo</span></div></div>
-        <div className="text-right"><strong className="block text-sm">27 min</strong><span className="text-[0.65rem] text-[#778078]">2.1 km</span></div>
+        <div className="flex min-w-0 items-center gap-3"><img src={walker.portrait} alt="" className="size-10 shrink-0 rounded-full object-cover" /><div className="min-w-0"><strong className="block truncate text-sm">{walker.name}</strong><span className="text-[0.65rem] text-[#778078]">{mapCopy.withDog}</span></div></div>
+        <div className="shrink-0 text-right"><strong className="block text-sm">{stats.minutes} min</strong><span className="text-[0.65rem] text-[#778078]">{stats.distance} km</span></div>
       </div>
     </div>
   );
@@ -288,6 +296,12 @@ export function AppPrototype({ copy, locale, onLocaleChange, onExit }: AppProtot
   const [routeProgress, setRouteProgress] = useState(18);
   const [rated, setRated] = useState(0);
   const [favoritesOnly, setFavoritesOnly] = useState(false);
+  const [comparisonIds, setComparisonIds] = useState<string[]>([]);
+  const [comparisonOpen, setComparisonOpen] = useState(false);
+  const [activeBooking, setActiveBooking] = useState<WalkSnapshot | null>(null);
+  const [completedBooking, setCompletedBooking] = useState<WalkSnapshot | null>(null);
+  const [preparation, setPreparation] = useState<PreparationItem[]>([]);
+  const [bookingError, setBookingError] = useState(false);
   const connections = useWalkerConnections();
   const t = appText[locale];
   const conditions = getWalkConditions(Number(time.split(':')[0]) < 17 ? 33 : 28);
@@ -311,6 +325,15 @@ export function AppPrototype({ copy, locale, onLocaleChange, onExit }: AppProtot
   }, [district, dog?.size, favoritesOnly, connections.favorites]);
   const currentWalker = selectedWalker ?? gezWalkers[0];
   const canBook = currentWalker.acceptedSizes.includes(dog?.size ?? 'large');
+  const historicBooking = createWalkSnapshot({ walkerId: 'nigar', dog: defaultDog, day: 'Today', time: '18:30', duration: 45 })!;
+  const displayBooking = status === 'completed' ? completedBooking ?? historicBooking : activeBooking ?? historicBooking;
+  const activeWalker = gezWalkers.find(walker => walker.id === displayBooking.walkerId)!;
+  const sessionCopy = walkSessionText(displayBooking, locale);
+  const dogCopy = dogInterfaceCopy(locale, dog?.name ?? defaultDog.name);
+  const reportMetrics = getWalkMetrics(displayBooking.duration, 100);
+  const historyBooking = completedBooking ?? historicBooking;
+  const historyWalker = gezWalkers.find(walker => walker.id === historyBooking.walkerId)!;
+  const historyMetrics = getWalkMetrics(historyBooking.duration, 100);
 
   const finishSignIn = () => {
     window.localStorage.setItem('gez-auth', 'true');
@@ -327,9 +350,15 @@ export function AppPrototype({ copy, locale, onLocaleChange, onExit }: AppProtot
   };
 
   const requestWalk = () => {
-    if (!canBook) return;
+    const snapshot = dog ? createWalkSnapshot({ walkerId: currentWalker.id, dog, day, time, duration }) : null;
+    if (!snapshot) { setBookingError(true); return; }
+    setActiveBooking(snapshot);
+    setPreparation([]);
+    setRated(0);
+    setRouteProgress(18);
+    setBookingError(false);
     setBookingOpen(false);
-    setSelectedWalker(currentWalker);
+    setSelectedWalker(gezWalkers.find(walker => walker.id === snapshot.walkerId) ?? null);
     setStatus('requested');
   };
 
@@ -338,6 +367,11 @@ export function AppPrototype({ copy, locale, onLocaleChange, onExit }: AppProtot
     const next = advanceWalkStatus(status);
     setStatus(next);
     if (next === 'walking') setRouteProgress(24);
+  };
+
+  const finishWalk = () => {
+    if (activeBooking) setCompletedBooking(activeBooking);
+    setStatus('completed');
   };
 
   if (gate === 'phone') return <SignInGate copy={copy} onComplete={finishSignIn} onBack={onExit} />;
@@ -356,7 +390,7 @@ export function AppPrototype({ copy, locale, onLocaleChange, onExit }: AppProtot
           setDogDraft(draft);
           setGate('phone');
         }}
-        backLabel={editingDog ? t.backToDog : t.backToSignIn}
+        backLabel={editingDog ? dogCopy.backToDog : t.backToSignIn}
         submitLabel={editingDog ? t.save : copy.saveDog}
       />
     );
@@ -368,7 +402,7 @@ export function AppPrototype({ copy, locale, onLocaleChange, onExit }: AppProtot
         <div className="mx-auto flex w-full max-w-[1080px] items-center justify-between"><GezLogo /><button onClick={() => setStatus(null)} className="grid size-11 place-items-center rounded-full border border-[#d8d3c7]"><X className="size-4" /></button></div>
         <section className="m-auto w-full max-w-[720px] py-16 text-center">
           <span className="mx-auto grid size-20 place-items-center rounded-full bg-[#dfe7d8]"><CheckCircle2 className="size-8 text-[#587050]" /></span>
-          <h1 className="font-display mt-8 text-5xl font-medium tracking-[-0.05em] sm:text-6xl">{status === 'requested' ? t.received : statusLabels[locale][status]}</h1>
+          <h1 className="font-display mt-8 text-5xl font-medium tracking-[-0.05em] sm:text-6xl">{status === 'requested' ? sessionCopy.received : statusLabels[locale][status]}</h1>
           <p className="mt-4 text-sm text-[#727c74]">{t.simulate}</p>
           <div className="mt-12 grid grid-cols-5 gap-1">
             {(['requested', 'accepted', 'arriving', 'walking', 'completed'] as WalkStatus[]).map((item, index, all) => {
@@ -376,7 +410,8 @@ export function AppPrototype({ copy, locale, onLocaleChange, onExit }: AppProtot
               return <div key={item}><div className={`h-1.5 rounded-full ${active ? 'bg-[#7d9472]' : 'bg-[#ded8cc]'}`} /><p className={`mt-3 hidden text-[0.62rem] font-semibold sm:block ${active ? 'text-[#31483b]' : 'text-[#9aa19b]'}`}>{statusLabels[locale][item]}</p></div>;
             })}
           </div>
-          <div className="mx-auto mt-10 flex max-w-md items-center gap-4 rounded-[24px] border border-[#ddd7cc] bg-[#fffaf1] p-4 text-left"><img src={currentWalker.portrait} alt={currentWalker.name} className="size-14 rounded-full object-cover" /><div className="flex-1"><strong className="block">{currentWalker.name}</strong><span className="text-xs text-[#778078]">{day} · {time} · {duration} min</span></div><span className="font-bold">{priceForDuration(currentWalker.price45, duration)} AZN</span></div>
+          <div className="mx-auto mt-10 flex max-w-md items-center gap-4 rounded-[24px] border border-[#ddd7cc] bg-[#fffaf1] p-4 text-left"><img src={activeWalker.portrait} alt={activeWalker.name} className="size-14 rounded-full object-cover" /><div className="min-w-0 flex-1"><strong className="block truncate">{activeWalker.name}</strong><span className="text-xs text-[#778078]">{sessionCopy.day} · {displayBooking.time} · {displayBooking.duration} min</span></div><span className="shrink-0 font-bold">{displayBooking.price} AZN</span></div>
+          {(status === 'accepted' || status === 'arriving') && <WalkPreparation locale={locale} treats={displayBooking.treats} checked={preparation} onToggle={item => setPreparation(value => value.includes(item) ? value.filter(entry => entry !== item) : [...value, item])} />}
           <button onClick={nextStatus} className="mt-8 h-14 rounded-full bg-[#31483b] px-8 text-sm font-bold text-white">{copy.nextStatus}<ArrowRight className="ml-2 inline size-4" /></button>
         </section>
       </main>
@@ -389,12 +424,12 @@ export function AppPrototype({ copy, locale, onLocaleChange, onExit }: AppProtot
         <div className="mx-auto max-w-[1200px]">
           <div className="mb-6 flex items-center justify-between"><button onClick={() => setStatus('accepted')} className="grid size-11 place-items-center rounded-full border border-[#d8d3c7]"><ArrowLeft className="size-4" /></button><GezLogo /><span className="rounded-full bg-[#f0ddcf] px-3 py-2 text-[0.65rem] font-bold text-[#8c523f]">LIVE</span></div>
           <div className="grid gap-6 lg:grid-cols-[1.35fr_.65fr]">
-            <div><h1 className="font-display mb-6 text-4xl font-medium tracking-[-0.045em] sm:text-6xl">{copy.liveTitle}</h1><LiveMap progress={routeProgress} /></div>
+            <div><h1 className="font-display mb-6 text-4xl font-medium tracking-[-0.045em] sm:text-6xl">{sessionCopy.liveTitle}</h1><LiveMap progress={routeProgress} walker={activeWalker} snapshot={displayBooking} locale={locale} /></div>
             <aside className="flex flex-col gap-4 lg:pt-24">
-              <div className="rounded-[26px] border border-[#ddd7cc] bg-[#fffaf1] p-5"><p className="text-[0.65rem] font-bold uppercase tracking-[0.16em] text-[#858e87]">{t.route}</p><div className="mt-5 space-y-5">{[[Check, 'Walk started', '18:31'], [CloudSun, t.water, '18:49'], [Plus, t.photo, '18:55'], [Navigation, t.heading, routeProgress > 65 ? 'Now' : 'Soon']].map(([Icon, label, value], index) => { const IconComponent = Icon as typeof Check; return <div key={String(label)} className={`flex gap-3 ${routeProgress < 35 && index > 1 ? 'opacity-35' : ''}`}><span className="grid size-8 shrink-0 place-items-center rounded-full bg-[#e5ebdf]"><IconComponent className="size-3.5" /></span><div className="flex-1"><strong className="block text-sm">{String(label)}</strong><span className="text-[0.65rem] text-[#8a928c]">{String(value)}</span></div></div>; })}</div></div>
-              <div className={`overflow-hidden rounded-[26px] border border-[#ddd7cc] bg-[#fffaf1] transition ${routeProgress > 35 ? 'opacity-100' : 'opacity-40'}`}><img src="./gez-milo-3d.webp" alt="Milo enjoying a walk" className="aspect-[1.65] w-full object-cover" /><p className="p-4 text-sm leading-6">Milo found his favorite shady corner. He had some water and is doing great.</p></div>
-              <button onClick={() => routeProgress >= 82 ? setStatus('completed') : setRouteProgress((value) => Math.min(85, value + 28))} className="h-13 rounded-full bg-[#31483b] text-sm font-bold text-white">{routeProgress >= 82 ? 'Finish walk' : 'Next route update'}</button>
-              <div className="grid grid-cols-2 gap-2"><button className="h-12 rounded-full border border-[#d8d3c7] text-xs font-bold"><MessageCircle className="mr-2 inline size-4" />{t.message}</button><button className="h-12 rounded-full border border-[#d8d3c7] text-xs font-bold"><Phone className="mr-2 inline size-4" />{t.urgent}</button></div>
+              <div className="rounded-[26px] border border-[#ddd7cc] bg-[#fffaf1] p-5"><p className="text-[0.65rem] font-bold uppercase tracking-[0.16em] text-[#858e87]">{t.route}</p><div className="mt-5 space-y-5">{[[Check, 'Walk started', addMinutesToTime(displayBooking.time, 1)], [CloudSun, t.water, addMinutesToTime(displayBooking.time, 19)], [Plus, t.photo, addMinutesToTime(displayBooking.time, 24)], [Navigation, t.heading, routeProgress > 65 ? 'Now' : 'Soon']].map(([Icon, label, value], index) => { const IconComponent = Icon as typeof Check; return <div key={String(label)} className={`flex gap-3 ${routeProgress < 35 && index > 1 ? 'opacity-35' : ''}`}><span className="grid size-8 shrink-0 place-items-center rounded-full bg-[#e5ebdf]"><IconComponent className="size-3.5" /></span><div className="flex-1"><strong className="block text-sm">{String(label)}</strong><span className="text-[0.65rem] text-[#8a928c]">{String(value)}</span></div></div>; })}</div></div>
+              <div className={`overflow-hidden rounded-[26px] border border-[#ddd7cc] bg-[#fffaf1] transition ${routeProgress > 35 ? 'opacity-100' : 'opacity-40'}`}><img src="./gez-milo-3d.webp" alt={`${displayBooking.dogName} enjoying a simulated walk`} className="aspect-[1.65] w-full object-cover" /><p className="p-4 text-sm leading-6">{sessionCopy.photo}</p></div>
+              <button onClick={() => routeProgress >= 82 ? finishWalk() : setRouteProgress((value) => Math.min(85, value + 28))} className="h-13 rounded-full bg-[#31483b] text-sm font-bold text-white">{routeProgress >= 82 ? 'Finish walk' : 'Next route update'}</button>
+              <div className="grid grid-cols-2 gap-2"><button className="h-12 rounded-full border border-[#d8d3c7] text-xs font-bold"><MessageCircle className="mr-2 inline size-4" />{sessionCopy.message}</button><button className="h-12 rounded-full border border-[#d8d3c7] text-xs font-bold"><Phone className="mr-2 inline size-4" />{t.urgent}</button></div>
             </aside>
           </div>
         </div>
@@ -406,17 +441,17 @@ export function AppPrototype({ copy, locale, onLocaleChange, onExit }: AppProtot
     return (
       <main className="gez-screen-safe min-h-dvh bg-[#f6f1e7] px-5 py-6 sm:px-8">
         <div className="mx-auto max-w-[1050px]">
-          <div className="flex items-center justify-between"><button onClick={() => { setStatus(null); setTab('activity'); }} className="grid size-11 place-items-center rounded-full border border-[#d8d3c7]"><ArrowLeft className="size-4" /></button><span className="text-xs font-bold uppercase tracking-[0.16em] text-[#7b857e]">{t.report}</span><GezLogo /></div>
-          <section className="py-12 text-center"><p className="text-5xl">☀</p><h1 className="font-display mt-5 text-5xl font-medium tracking-[-0.05em] sm:text-7xl">{copy.reportTitle}</h1><p className="mt-4 text-sm text-[#737d75]">Yasamal · Today with Nigar</p></section>
+          <div className="flex items-center justify-between"><button onClick={() => { setStatus(null); setSelectedWalker(null); setTab('activity'); }} aria-label={t.back} className="grid size-11 place-items-center rounded-full border border-[#d8d3c7]"><ArrowLeft className="size-4" /></button><span className="text-xs font-bold uppercase tracking-[0.16em] text-[#7b857e]">{t.report}</span><GezLogo /></div>
+          <section className="py-12 text-center"><p className="text-5xl">☀</p><h1 className="font-display mt-5 text-5xl font-medium tracking-[-0.05em] sm:text-7xl">{sessionCopy.reportTitle}</h1><p className="mt-4 text-sm text-[#737d75]">{activeWalker.district} · {sessionCopy.day} · {activeWalker.name}</p><p className="mt-2 text-xs text-[#8a938c]">{sessionCopy.simulated}</p></section>
           <div className="grid gap-5 lg:grid-cols-[1.15fr_.85fr]">
-            <LiveMap progress={100} />
+            <LiveMap progress={100} walker={activeWalker} snapshot={displayBooking} locale={locale} completed />
             <div className="grid gap-4">
-              <div className="grid grid-cols-3 rounded-[26px] border border-[#ddd7cc] bg-[#fffaf1] p-5 text-center"><div><strong className="block text-2xl">42</strong><span className="text-[0.65rem] text-[#7d867f]">min</span></div><div><strong className="block text-2xl">2.7</strong><span className="text-[0.65rem] text-[#7d867f]">km</span></div><div><strong className="block text-2xl">4,180</strong><span className="text-[0.65rem] text-[#7d867f]">steps</span></div></div>
+              <div className="grid grid-cols-3 rounded-[26px] border border-[#ddd7cc] bg-[#fffaf1] p-5 text-center"><div><strong className="block text-2xl">{reportMetrics.minutes}</strong><span className="text-[0.65rem] text-[#7d867f]">min</span></div><div><strong className="block text-2xl">{reportMetrics.distance}</strong><span className="text-[0.65rem] text-[#7d867f]">km</span></div><div><strong className="block text-2xl">{reportMetrics.steps.toLocaleString(locale)}</strong><span className="text-[0.65rem] text-[#7d867f]">steps</span></div></div>
               <div className="rounded-[26px] border border-[#ddd7cc] bg-[#fffaf1] p-5"><h3 className="text-xs font-bold uppercase tracking-[0.14em] text-[#858e87]">{t.summary}</h3><div className="mt-5 grid grid-cols-3 gap-3 text-sm"><div><span className="block text-[#7d867f]">Pee</span><strong>× 3</strong></div><div><span className="block text-[#7d867f]">Poop</span><strong>× 1</strong></div><div><span className="block text-[#7d867f]">Water</span><strong>Yes</strong></div></div></div>
-              <div className="rounded-[26px] border border-[#ddd7cc] bg-[#fffaf1] p-5"><p className="text-xs font-bold uppercase tracking-[0.14em] text-[#858e87]">{t.note}</p><p className="mt-4 text-sm leading-6">“Milo was full of energy today. We did two loops around the park, had a water break halfway through and he was very calm around other dogs.”</p></div>
+              <div className="rounded-[26px] border border-[#ddd7cc] bg-[#fffaf1] p-5"><p className="text-xs font-bold uppercase tracking-[0.14em] text-[#858e87]">{sessionCopy.note}</p><p className="mt-4 text-sm leading-6">“{sessionCopy.reportNote}”</p></div>
               <div className="grid grid-cols-3 gap-2">{['photo-1552053831-71594a27632d', 'photo-1558788353-f76d92427f16', 'photo-1517849845537-4d257902454a'].map((id) => <img key={id} src={`https://images.unsplash.com/${id}?auto=format&fit=crop&w=400&q=80`} alt="Walk update" className="aspect-square rounded-2xl object-cover" />)}</div>
-              <div className="rounded-[26px] border border-[#ddd7cc] bg-[#fffaf1] p-5 text-center"><p className="text-sm font-bold">{t.rate}</p><div className="mt-3 flex justify-center gap-1">{[1, 2, 3, 4, 5].map((star) => <button key={star} onClick={() => setRated(star)} aria-label={`Rate ${star} stars`} className="grid size-11 place-items-center rounded-full"><Star className={`size-6 ${rated >= star ? 'fill-[#d68160] text-[#d68160]' : 'text-[#c9c5ba]'}`} /></button>)}</div></div>
-              <button onClick={() => { setStatus(null); setSelectedWalker(gezWalkers[0]); setBookingOpen(true); }} className="h-14 rounded-full bg-[#31483b] text-sm font-bold text-white">{copy.bookAgain}</button>
+              <div className="rounded-[26px] border border-[#ddd7cc] bg-[#fffaf1] p-5 text-center"><p className="text-sm font-bold">{sessionCopy.rate}</p><div className="mt-3 flex justify-center gap-1">{[1, 2, 3, 4, 5].map(star => <button key={star} onClick={() => setRated(star)} aria-label={`Rate ${star} stars`} className="grid size-11 place-items-center rounded-full"><Star className={`size-6 ${rated >= star ? 'fill-[#d68160] text-[#d68160]' : 'text-[#c9c5ba]'}`} /></button>)}</div>{rated > 0 && <p aria-live="polite" className="mt-3 text-xs text-[#68736c]">{planningCopy[locale].rated}</p>}</div>
+              <button onClick={() => { setStatus(null); setSelectedWalker(activeWalker); setBookingOpen(true); }} className="h-14 rounded-full bg-[#31483b] text-sm font-bold text-white">{sessionCopy.bookAgain}</button>
             </div>
           </div>
         </div>
@@ -424,7 +459,7 @@ export function AppPrototype({ copy, locale, onLocaleChange, onExit }: AppProtot
     );
   }
 
-  const screenTitle = tab === 'walk' ? copy.whenWalk : tab === 'activity' ? t.history : tab === 'dog' ? dog?.name : tab === 'profile' ? t.account : t.welcome;
+  const screenTitle = tab === 'walk' ? dogCopy.walkQuestion : tab === 'activity' ? t.history : tab === 'dog' ? dog?.name : tab === 'profile' ? t.account : t.welcome;
 
   return (
     <main className="gez-app-shell min-h-dvh bg-[#f6f1e7] text-[#26362e]">
@@ -438,7 +473,7 @@ export function AppPrototype({ copy, locale, onLocaleChange, onExit }: AppProtot
 
         {tab === 'home' && (
           <section className="grid gap-5 lg:grid-cols-[1.25fr_.75fr]">
-            <div className="relative min-h-[430px] overflow-hidden rounded-[34px] bg-[#31483b] p-7 text-white sm:p-10"><div className="relative z-10 max-w-lg"><span className="flex items-center gap-2 text-xs font-bold text-[#cad6c1]"><span className="size-2 rounded-full bg-[#b9ccab]" /> Home now</span><h2 className="font-display mt-7 text-5xl font-medium leading-[1.03] tracking-[-0.05em] sm:text-6xl">{t.okay}</h2><p className="mt-5 max-w-md text-sm leading-6 text-white/60">His last walk ended at 17:12. Water, route and Nigar’s note are saved in Activity.</p><button onClick={() => setTab('walk')} className="mt-8 h-13 rounded-full bg-[#f6f1e7] px-6 text-sm font-bold text-[#31483b]">{copy.findWalker}<ArrowRight className="ml-2 inline size-4" /></button></div><img src="./gez-milo-3d.webp" alt="Milo at home" className="absolute bottom-[-14%] right-[-5%] hidden h-[78%] w-[48%] rotate-3 rounded-[40%] object-cover opacity-90 sm:block" /></div>
+            <div className="relative min-h-[430px] overflow-hidden rounded-[34px] bg-[#31483b] p-7 text-white sm:p-10"><div className="relative z-10 max-w-lg"><span className="flex items-center gap-2 text-xs font-bold text-[#cad6c1]"><span className="size-2 rounded-full bg-[#b9ccab]" /> Home now</span><h2 className="font-display mt-7 text-5xl font-medium leading-[1.03] tracking-[-0.05em] sm:text-6xl">{dogCopy.home}</h2><p className="mt-5 max-w-md text-sm leading-6 text-white/60">{dogCopy.lastWalk}</p><button onClick={() => setTab('walk')} className="mt-8 h-13 rounded-full bg-[#f6f1e7] px-6 text-sm font-bold text-[#31483b]">{copy.findWalker}<ArrowRight className="ml-2 inline size-4" /></button></div><img src="./gez-milo-3d.webp" alt={`${dog?.name ?? defaultDog.name} at home`} className="absolute bottom-[-14%] right-[-5%] hidden h-[78%] w-[48%] rotate-3 rounded-[40%] object-cover opacity-90 sm:block" /></div>
             <div className="grid gap-5"><div className="rounded-[28px] border border-[#ddd7cc] bg-[#fffaf1] p-6"><div className="flex items-center justify-between"><p className="text-xs font-bold text-[#7c867f]">{t.conditions}</p><CloudSun className="size-5 text-[#7a8f74]" /></div><p className="font-display mt-5 text-5xl">28°C</p><p className="mt-2 text-sm text-[#68736c]">{getWalkConditions(28).message[locale]}</p></div><FavoriteWalkers ids={connections.favorites} locale={locale} onOpen={setSelectedWalker} onBrowse={() => { setFavoritesOnly(false); setTab('walk'); }} /></div>
           </section>
         )}
@@ -452,21 +487,22 @@ export function AppPrototype({ copy, locale, onLocaleChange, onExit }: AppProtot
               <label><span className="px-2 text-[0.62rem] font-bold uppercase tracking-[0.12em] text-[#89928b]">{t.district}</span><select value={district} onChange={(event) => setDistrict(event.target.value as District | 'All')} className="mt-2 h-11 w-full rounded-xl bg-[#ede8de] px-3 text-base font-bold outline-none">{districts.map((item) => <option key={item} value={item}>{item === 'All' ? t.all : item}</option>)}</select></label>
             </div>
             <div className={`mt-4 flex items-start gap-3 rounded-[22px] border p-4 ${conditions.level === 'hot' ? 'border-[#e1b59e] bg-[#f3e0d4]' : 'border-[#cbd6c4] bg-[#e6eddf]'}`}><CloudSun className="mt-0.5 size-5" /><div><strong className="text-sm">{conditions.temperature}°C · {conditions.level === 'hot' ? 'Hot pavement risk' : 'Comfortable'}</strong><p className="mt-1 text-xs leading-5 text-[#667068]">{conditions.message[locale]}</p></div></div>
-            <div className="mt-8 flex items-center justify-between"><h2 className="text-xl font-bold">{copy.nearby}</h2><span className="text-xs text-[#78827b]">{matches.length} {t.available}</span></div>
+            <div className="mt-8 flex items-center justify-between"><h2 className="text-xl font-bold">{copy.nearby}</h2><span className="text-xs text-[#78827b]">{matches.length} {dogCopy.available}</span></div>
             <div className="mt-4"><button aria-pressed={favoritesOnly} onClick={() => setFavoritesOnly(value => !value)} className={`inline-flex min-h-11 items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold ${favoritesOnly ? 'border-[#31483b] bg-[#31483b] text-white' : 'border-[#cbd1c0] bg-[#fffaf1] text-[#52694c]'}`}><Heart className="size-4" />{connectionText[locale].only}</button></div>
-            {matches.length ? <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{matches.map(walker => <WalkerCard key={walker.id} walker={walker} duration={duration} onOpen={() => setSelectedWalker(walker)} favorite={connections.favorites.includes(walker.id)} locale={locale} onToggleFavorite={() => connections.toggle(walker.id)} />)}</div> : <div className="mt-5 rounded-[28px] border border-dashed border-[#cec8bb] p-8 text-center text-sm text-[#707a72]">{favoritesOnly ? connectionText[locale].emptyHint : t.noMatch}</div>}
+            <ComparisonBar ids={comparisonIds} locale={locale} onClear={() => setComparisonIds([])} onRemove={id => setComparisonIds(values => values.filter(value => value !== id))} onOpen={() => setComparisonOpen(true)} />
+            {matches.length ? <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{matches.map(walker => <WalkerCard key={walker.id} walker={walker} duration={duration} onOpen={() => setSelectedWalker(walker)} favorite={connections.favorites.includes(walker.id)} locale={locale} onToggleFavorite={() => connections.toggle(walker.id)} comparing={comparisonIds.includes(walker.id)} comparisonFull={comparisonIds.length >= 2} onToggleComparison={() => setComparisonIds(values => toggleComparison(values, walker.id))} />)}</div> : <div className="mt-5 rounded-[28px] border border-dashed border-[#cec8bb] p-8 text-center text-sm text-[#707a72]">{favoritesOnly ? connectionText[locale].emptyHint : dogCopy.noMatch}</div>}
           </section>
         )}
 
         {tab === 'activity' && (
           <section className="grid gap-5 lg:grid-cols-[1fr_.75fr]">
-            <div className="rounded-[28px] border border-[#ddd7cc] bg-[#fffaf1] p-6"><div className="flex items-center justify-between"><h2 className="text-sm font-bold">{t.past}</h2><span className="text-xs text-[#818a83]">3 reports</span></div>{[['Today', '42 min · 2.7 km', 'Nigar'], ['24 Aug', '36 min · 2.2 km', 'Nigar'], ['18 Aug', '48 min · 3.1 km', 'Murad']].map(([date, stats, walker], index) => <button key={date} onClick={() => index === 0 && setStatus('completed')} className="flex w-full items-center gap-4 border-b border-[#e3ded4] py-5 text-left last:border-0"><span className="grid size-11 place-items-center rounded-full bg-[#e4ebde]"><Navigation className="size-4" /></span><div className="flex-1"><strong className="block text-sm">{date} · {walker}</strong><span className="text-xs text-[#7d867f]">{stats}</span></div><ChevronRight className="size-4 text-[#9ba19d]" /></button>)}</div>
-            <div className="rounded-[28px] bg-[#e8e2d6] p-6"><p className="text-xs font-bold text-[#7d867f]">{t.next}</p><h3 className="font-display mt-5 text-4xl">No walk booked.</h3><p className="mt-3 text-sm leading-6 text-[#68736c]">When Milo needs fresh air, Nigar and the rest of your trusted walkers are here.</p><button onClick={() => setTab('walk')} className="mt-8 h-12 rounded-full bg-[#31483b] px-5 text-xs font-bold text-white">{copy.findWalker}</button></div>
+            <div className="rounded-[28px] border border-[#ddd7cc] bg-[#fffaf1] p-6"><div className="flex items-center justify-between"><h2 className="text-sm font-bold">{t.past}</h2><span className="text-xs text-[#818a83]">3 reports</span></div>{[['Today', `${historyMetrics.minutes} min · ${historyMetrics.distance} km`, historyWalker.name], ['24 Aug', '36 min · 2.2 km', 'Nigar'], ['18 Aug', '48 min · 3.1 km', 'Murad']].map(([date, stats, walker], index) => <button key={date} onClick={() => { if (index === 0) { setCompletedBooking(historyBooking); setStatus('completed'); } }} className="flex w-full items-center gap-4 border-b border-[#e3ded4] py-5 text-left last:border-0"><span className="grid size-11 place-items-center rounded-full bg-[#e4ebdf]"><Navigation className="size-4" /></span><div className="flex-1"><strong className="block text-sm">{date} · {walker}</strong><span className="text-xs text-[#7d867f]">{stats}</span></div><ChevronRight className="size-4 text-[#9ba19d]" /></button>)}</div>
+            <div className="rounded-[28px] bg-[#e8e2d6] p-6"><p className="text-xs font-bold text-[#7d867f]">{t.next}</p><h3 className="font-display mt-5 text-4xl">No walk booked.</h3><p className="mt-3 text-sm leading-6 text-[#68736c]">{dogCopy.nextWalk}</p><button onClick={() => setTab('walk')} className="mt-8 h-12 rounded-full bg-[#31483b] px-5 text-xs font-bold text-white">{copy.findWalker}</button></div>
           </section>
         )}
 
         {tab === 'dog' && dog && (
-          <section className="grid gap-5 lg:grid-cols-[.7fr_1.3fr]"><div className="overflow-hidden rounded-[30px] border border-[#ddd7cc] bg-[#fffaf1]"><img src="./gez-milo-3d.webp" alt="Milo" className="aspect-[1.2] w-full object-cover" /><div className="p-6"><h2 className="text-2xl font-bold">{dog.name}</h2><p className="mt-1 text-sm text-[#778078]">{dog.breed} · {dog.age} years · {dog.weight} kg</p><div className="mt-4 flex flex-wrap gap-2">{['Friendly', 'Active', 'Loves people'].map((item) => <span key={item} className="rounded-full bg-[#e7ecdf] px-3 py-1.5 text-xs font-semibold">{item}</span>)}</div></div></div><div className="grid gap-4 sm:grid-cols-2"><div className="rounded-[26px] border border-[#ddd7cc] bg-[#fffaf1] p-5"><p className="text-xs font-bold text-[#818a83]">Behavior</p><dl className="mt-4 space-y-3 text-sm"><div className="flex justify-between"><dt>Dogs</dt><dd>{dog.friendlyDogs ? 'Friendly' : 'Needs space'}</dd></div><div className="flex justify-between"><dt>Leash</dt><dd>{dog.pulls ? 'Pulls' : 'Walks calmly'}</dd></div><div className="flex justify-between"><dt>Treats</dt><dd>{dog.treats ? 'Yes' : 'No'}</dd></div></dl></div><div className="rounded-[26px] border border-[#ddd7cc] bg-[#fffaf1] p-5"><p className="text-xs font-bold text-[#818a83]">Care</p><p className="mt-4 text-sm leading-6">{dog.instructions}</p></div><div className="rounded-[26px] border border-[#ddd7cc] bg-[#fffaf1] p-5 sm:col-span-2"><p className="text-xs font-bold text-[#818a83]">Emergency & vet</p><div className="mt-4 grid gap-3 text-sm sm:grid-cols-2"><p>{dog.emergency}</p><p>{dog.vet}</p></div></div></div></section>
+          <section className="grid gap-5 lg:grid-cols-[.7fr_1.3fr]"><div className="overflow-hidden rounded-[30px] border border-[#ddd7cc] bg-[#fffaf1]"><img src="./gez-milo-3d.webp" alt={dog.name} className="aspect-[1.2] w-full object-cover" /><div className="p-6"><h2 className="text-2xl font-bold">{dog.name}</h2><p className="mt-1 text-sm text-[#778078]">{dog.breed} · {dog.age} years · {dog.weight} kg</p><div className="mt-4 flex flex-wrap gap-2">{['Friendly', 'Active', 'Loves people'].map((item) => <span key={item} className="rounded-full bg-[#e7ecdf] px-3 py-1.5 text-xs font-semibold">{item}</span>)}</div></div></div><div className="grid gap-4 sm:grid-cols-2"><div className="rounded-[26px] border border-[#ddd7cc] bg-[#fffaf1] p-5"><p className="text-xs font-bold text-[#818a83]">Behavior</p><dl className="mt-4 space-y-3 text-sm"><div className="flex justify-between"><dt>Dogs</dt><dd>{dog.friendlyDogs ? 'Friendly' : 'Needs space'}</dd></div><div className="flex justify-between"><dt>Leash</dt><dd>{dog.pulls ? 'Pulls' : 'Walks calmly'}</dd></div><div className="flex justify-between"><dt>Treats</dt><dd>{dog.treats ? 'Yes' : 'No'}</dd></div></dl></div><div className="rounded-[26px] border border-[#ddd7cc] bg-[#fffaf1] p-5"><p className="text-xs font-bold text-[#818a83]">Care</p><p className="mt-4 text-sm leading-6">{dog.instructions}</p></div><div className="rounded-[26px] border border-[#ddd7cc] bg-[#fffaf1] p-5 sm:col-span-2"><p className="text-xs font-bold text-[#818a83]">Emergency & vet</p><div className="mt-4 grid gap-3 text-sm sm:grid-cols-2"><p>{dog.emergency}</p><p>{dog.vet}</p></div></div></div></section>
         )}
 
         {tab === 'profile' && (
@@ -480,18 +516,21 @@ export function AppPrototype({ copy, locale, onLocaleChange, onExit }: AppProtot
         <WalkerProfile walker={selectedWalker} locale={locale} copy={copy} favorite={connections.favorites.includes(selectedWalker.id)} compatible={canBook} meeting={connections.meetings.find(meeting => meeting.walkerId === selectedWalker.id)} onToggleFavorite={() => connections.toggle(selectedWalker.id)} onRequestMeeting={connections.request} onCancelMeeting={() => connections.cancel(selectedWalker.id)} onChoose={() => { if (canBook) setBookingOpen(true); }} onClose={() => setSelectedWalker(null)} />
       )}
 
-      {bookingOpen && selectedWalker && (
-        <div className="gez-booking-overlay fixed inset-0 z-[60] flex items-end justify-center overflow-y-auto overscroll-contain bg-[#26362e]/45 p-0 backdrop-blur-sm sm:items-center sm:p-6" onClick={() => setBookingOpen(false)}>
-          <dialog open aria-modal="true" aria-labelledby="booking-summary-title" className="gez-booking-sheet relative m-0 w-full max-w-[620px] overflow-y-auto rounded-t-[34px] border-0 bg-[#fffaf1] p-5 text-inherit sm:rounded-[34px] sm:p-8" onClick={(event) => event.stopPropagation()}>
-            <div className="flex items-center justify-between"><h2 id="booking-summary-title" className="font-display text-3xl font-medium tracking-[-0.045em] sm:text-4xl">{t.summary}</h2><button onClick={() => setBookingOpen(false)} aria-label="Close booking summary" className="grid size-11 place-items-center rounded-full border border-[#ddd7cc]"><X className="size-4" /></button></div>
-            <div className="mt-5 grid grid-cols-[1fr_auto_1fr] items-center gap-2 rounded-[24px] bg-[#ece7dc] p-3 sm:mt-7 sm:p-4"><div className="flex min-w-0 flex-col items-center gap-2 sm:flex-row"><img src="./gez-milo-3d.webp" alt="Milo" className="size-10 shrink-0 rounded-full object-cover sm:size-12" /><strong className="text-sm">Milo</strong></div><span className="text-xs text-[#7e8780]">{t.with}</span><div className="flex min-w-0 flex-col-reverse items-center justify-end gap-2 sm:flex-row"><strong className="text-center text-sm">{selectedWalker.name}</strong><img src={selectedWalker.portrait} alt={selectedWalker.name} className="size-10 shrink-0 rounded-full object-cover sm:size-12" /></div></div>
+      {comparisonOpen && comparisonIds.length === 2 && <WalkerComparison ids={comparisonIds} locale={locale} duration={duration} size={dog?.size ?? 'large'} onClose={() => setComparisonOpen(false)} onView={walker => { setComparisonOpen(false); setSelectedWalker(walker); }} />}
+
+      {selectedWalker && (
+        <Dialog open={bookingOpen} onOpenChange={open => { setBookingOpen(open); if (!open) setBookingError(false); }}>
+          <DialogContent showCloseButton={false} className="gez-booking-sheet fixed bottom-0 left-1/2 top-auto m-0 grid w-full max-w-[620px] -translate-x-1/2 translate-y-0 gap-0 overflow-y-auto overscroll-contain rounded-t-[34px] border-0 bg-[#fffaf1] p-5 text-inherit sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 sm:rounded-[34px] sm:p-8">
+            <div className="flex items-center justify-between"><DialogTitle className="font-display text-3xl font-medium tracking-[-0.045em] sm:text-4xl">{t.summary}</DialogTitle><button onClick={() => setBookingOpen(false)} aria-label="Close booking summary" className="grid size-11 place-items-center rounded-full border border-[#ddd7cc]"><X className="size-4" /></button></div>
+            <div className="mt-5 grid grid-cols-[1fr_auto_1fr] items-center gap-2 rounded-[24px] bg-[#ece7dc] p-3 sm:mt-7 sm:p-4"><div className="flex min-w-0 flex-col items-center gap-2 sm:flex-row"><img src="./gez-milo-3d.webp" alt={dog?.name ?? 'Dog'} className="size-10 shrink-0 rounded-full object-cover sm:size-12" /><strong className="text-sm">{dog?.name}</strong></div><span className="text-xs text-[#7e8780]">{t.with}</span><div className="flex min-w-0 flex-col-reverse items-center justify-end gap-2 sm:flex-row"><strong className="text-center text-sm">{selectedWalker.name}</strong><img src={selectedWalker.portrait} alt={selectedWalker.name} className="size-10 shrink-0 rounded-full object-cover sm:size-12" /></div></div>
             <dl className="mt-5 grid grid-cols-2 gap-4 border-y border-[#e0dbd1] py-5 text-sm sm:grid-cols-4"><div><dt className="text-xs text-[#89918b]">Date</dt><dd className="mt-1 font-bold">{day}</dd></div><div><dt className="text-xs text-[#89918b]">Time</dt><dd className="mt-1 font-bold">{time}</dd></div><div><dt className="text-xs text-[#89918b]">Duration</dt><dd className="mt-1 font-bold">{duration} min</dd></div><div><dt className="text-xs text-[#89918b]">Total</dt><dd className="mt-1 font-bold">{priceForDuration(selectedWalker.price45, duration)} AZN</dd></div></dl>
-            <div className="mt-5 grid gap-3"><input placeholder={t.apartment} defaultValue="Building 12, entrance B, floor 4" className="gez-input" /><input placeholder={t.pickup} defaultValue="Call from the courtyard; I will bring Milo down." className="gez-input" /><textarea placeholder={t.special} defaultValue={dog?.instructions} className="gez-textarea" /></div>
+            <div className="mt-5 grid gap-3"><input placeholder={t.apartment} defaultValue="Building 12, entrance B, floor 4" className="gez-input" /><input placeholder={t.pickup} defaultValue={`Call from the courtyard; I will bring ${dog?.name ?? defaultDog.name} down.`} className="gez-input" /><textarea placeholder={t.special} defaultValue={dog?.instructions} className="gez-textarea" /></div>
             <div className={`mt-4 rounded-2xl p-4 text-xs ${conditions.level === 'hot' ? 'bg-[#f3e0d4]' : 'bg-[#e6eddf]'}`}><strong>{conditions.temperature}°C · {t.conditions}</strong><p className="mt-1 text-[#657068]">{conditions.message[locale]}</p></div>
             {!canBook && <p className="mt-4 text-sm leading-6 text-[#94614e]">{connectionText[locale].mismatchHint}</p>}
+            {bookingError && <p role="alert" className="mt-4 text-sm leading-6 text-[#94614e]">{planningCopy[locale].error}</p>}
             <button onClick={requestWalk} disabled={!canBook} className="mt-5 h-14 w-full rounded-full bg-[#31483b] text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50">{canBook ? copy.requestWalk : connectionText[locale].mismatch}</button>
-          </dialog>
-        </div>
+          </DialogContent>
+        </Dialog>
       )}
     </main>
   );

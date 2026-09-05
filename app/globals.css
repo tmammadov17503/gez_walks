@@ -140,8 +140,8 @@
 }
 
 @keyframes gez-float {
-  0%, 100% { transform: translateY(0) rotate(-1deg); }
-  50% { transform: translateY(-8px) rotate(-1deg); }
+  0%, 100% { transform: translateZ(40px) translateY(0) rotate(-1deg); }
+  50% { transform: translateZ(40px) translateY(-8px) rotate(-1deg); }
 }
 
 @keyframes gez-progress {
@@ -154,13 +154,52 @@
   50% { transform: translateY(-5px) rotate(-14deg); }
 }
 
+@keyframes gez-hero-drift {
+  0%, 100% { transform: translate3d(0, 7px, 0) rotate(var(--paw-rotate)); }
+  50% { transform: translate3d(-5px, -9px, 0) rotate(calc(var(--paw-rotate) + 4deg)); }
+}
+
 .gez-paw-sway { animation: gez-paw-sway 8s ease-in-out infinite; transform-origin: 50% 100%; }
+.gez-hero-paw {
+  width: 5rem;
+  opacity: .34;
+  filter: drop-shadow(0 12px 10px #31483b24);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 78%, transparent 100%);
+  animation: gez-hero-drift 8s ease-in-out infinite;
+  will-change: transform;
+}
+.gez-hero-paw:nth-child(1) { --paw-rotate: -34deg; left: 1%; top: 8%; width: 4.5rem; animation-delay: -2s; }
+.gez-hero-paw:nth-child(2) { --paw-rotate: 26deg; right: 1%; top: 20%; width: 5.5rem; animation-delay: -5s; animation-duration: 10s; }
+.gez-hero-paw:nth-child(3) { --paw-rotate: 42deg; bottom: 8%; left: 35%; width: 4rem; animation-delay: -4s; }
+.gez-hero-paw:nth-child(4) { --paw-rotate: -18deg; right: 31%; top: 5%; width: 3.5rem; animation-delay: -7s; animation-duration: 9s; }
+.gez-hero-paw:nth-child(5) { --paw-rotate: 18deg; bottom: 18%; right: -1%; width: 4.25rem; animation-delay: -1s; }
+[data-motion='paused'] .gez-hero-paw,
+[data-motion='paused'] .gez-float-card,
+[data-motion='paused'] .gez-progress,
+[data-motion='paused'] .gez-route-line,
+[data-motion='paused'] .gez-live-ping { animation-play-state: paused; }
+.gez-hero-stage { perspective: 1400px; transform-style: preserve-3d; }
+.gez-hero-model {
+  transform: rotateX(1deg) rotateY(-1.8deg);
+  transform-style: preserve-3d;
+  transition: transform .8s cubic-bezier(.22,.8,.24,1), filter .8s ease;
+  filter: drop-shadow(0 30px 42px #31483b14);
+}
+.gez-update-card {
+  transform: translateZ(58px) rotate(2deg);
+  box-shadow: 0 22px 46px -34px #31483b73;
+  transition: transform .65s cubic-bezier(.22,.8,.24,1);
+}
+[data-motion='paused'] .gez-hero-model { transform: none; transition: none; }
+.gez-comparison-bar { top: calc(5.25rem + var(--gez-safe-top)); }
 .gez-depth-grid { perspective: 1200px; }
 .gez-depth-card { transition: transform .45s ease, box-shadow .45s ease, border-color .45s ease; }
 .gez-trust-scene { transform: perspective(1200px) rotateY(3deg); transition: transform .7s ease; }
 .gez-trust-step { transition: transform .3s ease, background-color .3s ease; }
 
 @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  [data-motion='running'] .gez-hero-stage:hover .gez-hero-model { transform: rotateX(-.7deg) rotateY(1deg) scale(1.008); filter: drop-shadow(0 34px 48px #31483b20); }
+  [data-motion='running'] .gez-hero-stage:hover .gez-update-card { transform: translateZ(72px) rotate(0deg) translateY(-3px); }
   .gez-depth-card:hover { transform: translateY(-6px) rotateX(2deg); border-color: #b6c2ab; box-shadow: 0 18px 30px -24px #31483b66; }
   .gez-trust-scene:hover { transform: perspective(1200px) rotateY(0deg) translateY(-3px); }
   .gez-trust-step:hover { transform: translateX(4px); }
@@ -212,6 +251,22 @@
   input, select, textarea { font-size: 16px !important; }
 }
 
+@media (max-width: 639px) {
+  .gez-hero-paw { width: 3.5rem; opacity: .26; }
+  .gez-hero-paw:nth-child(1) { left: auto; right: -8%; top: 16%; width: 3.25rem; }
+  .gez-hero-paw:nth-child(2) { right: -4%; top: 65%; width: 4rem; }
+  .gez-hero-paw:nth-child(n+3) { display: none; }
+  .gez-motion-control { top: .25rem; }
+  .gez-comparison-bar { top: calc(4.75rem + var(--gez-safe-top)); }
+}
+
+@media (any-pointer: coarse) {
+  .gez-hero-stage { perspective: none; }
+  .gez-hero-model { transform: none; }
+  .gez-update-card { transform: rotate(2deg); }
+  .gez-float-card { transform-style: flat; }
+}
+
 @media (min-width: 768px) and (min-height: 700px) {
   .gez-live-map { min-height: 35rem; }
 }
@@ -230,6 +285,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
-  .gez-paw-sway, .gez-trust-scene { animation: none; transform: none; }
-  .gez-depth-card, .gez-trust-scene, .gez-trust-step { transition: none; }
+  .gez-paw-sway, .gez-hero-paw, .gez-trust-scene, .gez-hero-model, .gez-update-card { animation: none; transform: none; }
+  .gez-depth-card, .gez-trust-scene, .gez-trust-step, .gez-hero-model, .gez-update-card { transition: none; }
+  .gez-motion-control { display: none; }
 }

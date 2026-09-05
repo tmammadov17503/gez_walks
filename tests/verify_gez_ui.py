@@ -46,7 +46,7 @@ def verify_desktop(page):
 
     page.get_by_role("button", name="Walk", exact=True).first.click()
     page.get_by_role("heading", name="When does Milo need a walk?").wait_for()
-    page.locator("article").first.click()
+    page.locator("article").first.get_by_role("button", name="View profile", exact=True).click()
     page.get_by_role("button", name="Choose this walker").click()
     page.get_by_role("button", name="Request walk").click()
     page.get_by_text("Nigar has received your request.").wait_for()

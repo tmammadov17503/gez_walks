@@ -138,7 +138,7 @@ def open_walk_tab(page: Page):
 
 
 def verify_full_mobile_journey(page: Page, label: str):
-    page.locator("article").first.click()
+    page.get_by_role("button", name="View profile", exact=True).first.click()
     page.get_by_role("heading", name="Nigar M.", level=2).wait_for()
     assert_no_horizontal_overflow(page, f"{label} walker profile")
     page.get_by_role("button", name="Choose this walker").click()
