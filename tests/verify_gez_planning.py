@@ -17,8 +17,31 @@ with sync_playwright() as p:
         page.on('pageerror', lambda error: errors.append(str(error)))
         page.goto(args.url, wait_until='networkidle')
         expect(page.locator('.gez-hero-paw')).to_have_count(5)
+        scene_switch = page.get_by_role('group', name='Walk atmosphere')
+        expect(scene_switch).to_be_visible()
+        day_scene = scene_switch.get_by_role('button').filter(has_text='Day')
+        evening_scene = scene_switch.get_by_role('button').filter(has_text='Evening')
+        day_image = page.get_by_alt_text('A miniature Baku neighbourhood with a dog walker following a route home')
+        evening_image = page.get_by_alt_text('The miniature Baku neighbourhood at calm blue hour')
+        expect(day_scene).to_have_attribute('aria-pressed', 'true')
+        expect(day_image).to_have_attribute('aria-hidden', 'false')
+        expect(evening_image).to_have_attribute('aria-hidden', 'true')
+        evening_scene.click()
+        expect(evening_scene).to_have_attribute('aria-pressed', 'true')
+        expect(day_image).to_have_attribute('aria-hidden', 'true')
+        expect(evening_image).to_have_attribute('aria-hidden', 'false')
+        expect(page.get_by_text('24°C · Cooler pavement', exact=True)).to_be_visible()
+        expect(evening_image).to_have_css('opacity', '1')
+        if args.screenshots:
+            args.screenshots.mkdir(parents=True, exist_ok=True)
+            page.screenshot(path=str(args.screenshots / f'hero-evening-{width}.png'))
+        day_scene.click()
+        expect(day_scene).to_have_attribute('aria-pressed', 'true')
         expect(page.get_by_role('button', name='Pause motion')).to_be_visible()
         page.get_by_role('button', name='Pause motion').click()
+        evening_scene.click()
+        assert evening_image.evaluate('(e) => getComputedStyle(e).transitionDuration') == '0s'
+        day_scene.click()
         assert page.locator('.gez-hero-paw').first.evaluate('(e) => getComputedStyle(e).animationPlayState') == 'paused'
         assert page.locator('.gez-live-ping').evaluate('(e) => getComputedStyle(e).animationPlayState') == 'paused'
         if width >= 600:

@@ -178,6 +178,9 @@
 [data-motion='paused'] .gez-progress,
 [data-motion='paused'] .gez-route-line,
 [data-motion='paused'] .gez-live-ping { animation-play-state: paused; }
+[data-motion='paused'] .gez-scene-image,
+[data-motion='paused'] .gez-scene-wash,
+[data-motion='paused'] .gez-scene-option { transition: none; }
 .gez-hero-stage { perspective: 1400px; transform-style: preserve-3d; }
 .gez-hero-model {
   transform: rotateX(1deg) rotateY(-1.8deg);
@@ -185,6 +188,26 @@
   transition: transform .8s cubic-bezier(.22,.8,.24,1), filter .8s ease;
   filter: drop-shadow(0 30px 42px #31483b14);
 }
+.gez-scene-image {
+  opacity: 0;
+  transform: scale(1.018);
+  transition: opacity .75s ease, transform 1.15s cubic-bezier(.22,.8,.24,1), filter .75s ease;
+}
+.gez-scene-image.is-active { opacity: 1; transform: scale(1); }
+.gez-scene-evening { filter: brightness(.82) saturate(.88) contrast(1.04); }
+.gez-scene-wash {
+  z-index: 1;
+  opacity: 0;
+  background: linear-gradient(180deg, #4d667326 0%, #31483b1a 58%, #26362e33 100%);
+  transition: opacity .75s ease;
+}
+[data-scene='evening'] .gez-scene-wash { opacity: 1; }
+.gez-scene-switch {
+  transform: translateZ(68px);
+  box-shadow: 0 18px 36px -28px #26362e8c;
+}
+.gez-scene-option { transition: color .25s ease, background-color .25s ease, transform .25s ease; }
+.gez-scene-option:active { transform: scale(.97); }
 .gez-update-card {
   transform: translateZ(58px) rotate(2deg);
   box-shadow: 0 22px 46px -34px #31483b73;
@@ -257,6 +280,8 @@
   .gez-hero-paw:nth-child(2) { right: -4%; top: 65%; width: 4rem; }
   .gez-hero-paw:nth-child(n+3) { display: none; }
   .gez-motion-control { top: .25rem; }
+  .gez-scene-switch { left: .75rem; right: .75rem; justify-content: space-between; transform: none; }
+  .gez-scene-option { flex: 1; justify-content: center; padding-inline: .5rem; }
   .gez-comparison-bar { top: calc(4.75rem + var(--gez-safe-top)); }
 }
 
@@ -286,6 +311,6 @@
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
   .gez-paw-sway, .gez-hero-paw, .gez-trust-scene, .gez-hero-model, .gez-update-card { animation: none; transform: none; }
-  .gez-depth-card, .gez-trust-scene, .gez-trust-step, .gez-hero-model, .gez-update-card { transition: none; }
+  .gez-depth-card, .gez-trust-scene, .gez-trust-step, .gez-hero-model, .gez-update-card, .gez-scene-image, .gez-scene-wash, .gez-scene-option { transition: none; }
   .gez-motion-control { display: none; }
 }

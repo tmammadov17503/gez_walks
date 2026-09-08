@@ -8,9 +8,11 @@ import {
   ArrowRight,
   Check,
   Menu,
+  Moon,
   Pause,
   Play,
   ShieldCheck,
+  Sun,
   X,
 } from 'lucide-react';
 import { GezLogo } from '@/components/gez-logo';
@@ -24,11 +26,16 @@ type MarketingHomeProps = {
   onStart: () => void;
 };
 
+type HeroScene = 'day' | 'evening';
+
 const supportingCopy: Record<GezLocale, {
   live: string;
   place: string;
   update: string;
-  note: string;
+  sceneLabel: string;
+  sceneDay: string;
+  sceneEvening: string;
+  scenes: Record<HeroScene, { time: string; condition: string; note: string }>;
   steps: [string, string, string];
   stepCopy: [string, string, string];
   trust: string[];
@@ -36,7 +43,11 @@ const supportingCopy: Record<GezLocale, {
 }> = {
   en: {
     live: 'Walk in progress', place: 'Yasamal · Central Park', update: 'A little update',
-    note: 'Milo had water and is taking the shaded route home.',
+    sceneLabel: 'Walk atmosphere', sceneDay: 'Day', sceneEvening: 'Evening',
+    scenes: {
+      day: { time: '16:30', condition: '28°C · Comfortable', note: 'Milo had water and is taking the shaded route home.' },
+      evening: { time: '19:30', condition: '24°C · Cooler pavement', note: 'A calm blue-hour loop, with cooler pavement on the way home.' },
+    },
     steps: ['Create your dog', 'Choose the right person', 'Follow the walk'],
     stepCopy: ['Share the little things that make your dog themselves.', 'Meet first, ask questions, and choose with confidence.', 'See the route and receive a thoughtful report afterward.'],
     trust: ['Identity check', 'Interview', 'References', 'Dog-handling education', 'Trial walk', 'Community ratings'],
@@ -44,7 +55,11 @@ const supportingCopy: Record<GezLocale, {
   },
   az: {
     live: 'Gəzinti gedir', place: 'Yasamal · Mərkəzi Park', update: 'Kiçik bir xəbər',
-    note: 'Milo su içdi və indi kölgəli yolla evə qayıdır.',
+    sceneLabel: 'Gəzinti ab-havası', sceneDay: 'Gündüz', sceneEvening: 'Axşam',
+    scenes: {
+      day: { time: '16:30', condition: '28°C · Rahat', note: 'Milo su içdi və indi kölgəli yolla evə qayıdır.' },
+      evening: { time: '19:30', condition: '24°C · Səki sərindir', note: 'Milo axşam işığında sakit dövrə vurur, evə gedən yol daha sərindir.' },
+    },
     steps: ['İtinin profilini yarat', 'Doğru insanı seç', 'Gəzintini izlə'],
     stepCopy: ['İtini onun özü edən kiçik detalları bizimlə paylaş.', 'Əvvəlcə tanış ol, suallarını ver və rahat seçim et.', 'Marşrutu gör və sonda gözəl gəzinti hesabatı al.'],
     trust: ['Şəxsiyyət yoxlanışı', 'Müsahibə', 'Tövsiyələr', 'İt davranışı üzrə təlim', 'Sınaq gəzintisi', 'İcma rəyləri'],
@@ -52,7 +67,11 @@ const supportingCopy: Record<GezLocale, {
   },
   ru: {
     live: 'Прогулка идёт', place: 'Ясамал · Центральный парк', update: 'Небольшое обновление',
-    note: 'Майло попил воды и возвращается домой по тенистой дороге.',
+    sceneLabel: 'Время прогулки', sceneDay: 'День', sceneEvening: 'Вечер',
+    scenes: {
+      day: { time: '16:30', condition: '28°C · Комфортно', note: 'Майло попил воды и возвращается домой по тенистой дороге.' },
+      evening: { time: '19:30', condition: '24°C · Прохладный асфальт', note: 'Спокойный вечерний круг и прохладная дорога по пути домой.' },
+    },
     steps: ['Создайте профиль', 'Выберите человека', 'Следите за прогулкой'],
     stepCopy: ['Расскажите о мелочах, которые делают вашу собаку особенной.', 'Сначала познакомьтесь, задайте вопросы и спокойно выбирайте.', 'Смотрите маршрут и получите красивый отчёт после прогулки.'],
     trust: ['Проверка личности', 'Интервью', 'Рекомендации', 'Обучение обращению с собаками', 'Пробная прогулка', 'Отзывы сообщества'],
@@ -64,7 +83,9 @@ export function MarketingHome({ copy, locale, onLocaleChange, onStart }: Marketi
   const [menuOpen, setMenuOpen] = useState(false);
   const [applied, setApplied] = useState(false);
   const [motionPaused, setMotionPaused] = useState(false);
+  const [sceneMode, setSceneMode] = useState<HeroScene>('day');
   const local = supportingCopy[locale];
+  const activeScene = local.scenes[sceneMode];
 
   const goTo = (id: string) => {
     setMenuOpen(false);
@@ -72,7 +93,7 @@ export function MarketingHome({ copy, locale, onLocaleChange, onStart }: Marketi
   };
 
   return (
-    <main data-motion={motionPaused ? 'paused' : 'running'} className="min-h-dvh overflow-x-clip bg-[#f6f1e7] text-[#26362e]">
+    <main data-motion={motionPaused ? 'paused' : 'running'} data-scene={sceneMode} className="min-h-dvh overflow-x-clip bg-[#f6f1e7] text-[#26362e]">
       <header className="gez-safe-top relative z-40 mx-auto flex w-full max-w-[1480px] items-center justify-between px-5 pb-5 sm:px-8 lg:px-12">
         <a href="#top" aria-label="GƏZ home"><GezLogo /></a>
 
@@ -152,27 +173,60 @@ export function MarketingHome({ copy, locale, onLocaleChange, onStart }: Marketi
         </div>
 
         <div className="gez-hero-stage relative z-[1] min-h-[360px] sm:min-h-[500px] lg:min-h-[650px]">
+          <fieldset className="gez-scene-switch absolute left-4 top-4 z-20 flex rounded-full border border-white/60 bg-[#fffaf1]/90 p-1 backdrop-blur-md sm:left-6 sm:top-6">
+            <legend className="sr-only">{local.sceneLabel}</legend>
+            {(['day', 'evening'] as const).map((scene) => {
+              const isDay = scene === 'day';
+              const label = isDay ? local.sceneDay : local.sceneEvening;
+              const Icon = isDay ? Sun : Moon;
+              return (
+                <button
+                  key={scene}
+                  type="button"
+                  aria-pressed={sceneMode === scene}
+                  aria-label={`${label}, ${local.scenes[scene].time}`}
+                  onClick={() => setSceneMode(scene)}
+                  className={`gez-scene-option inline-flex min-h-10 items-center gap-1.5 rounded-full px-3 text-[0.68rem] font-bold transition sm:px-3.5 ${sceneMode === scene ? 'bg-[#31483b] text-white' : 'text-[#5f6962] hover:bg-white/70'}`}
+                >
+                  <Icon className="size-3.5" aria-hidden="true" />
+                  <span>{label}</span>
+                  <span className={sceneMode === scene ? 'text-white/65' : 'text-[#8a938c]'}>{local.scenes[scene].time}</span>
+                </button>
+              );
+            })}
+          </fieldset>
           <div className="gez-hero-model absolute inset-x-[-7%] top-[3%] h-[92%] overflow-hidden rounded-[52px] bg-[#efe8dc] lg:inset-x-[-4%]">
             <img
               src="./gez-baku-model.png"
               alt="A miniature Baku neighbourhood with a dog walker following a route home"
-              className="h-full w-full object-cover object-center"
+              aria-hidden={sceneMode !== 'day'}
+              className={`gez-scene-image absolute inset-0 h-full w-full object-cover object-center ${sceneMode === 'day' ? 'is-active' : ''}`}
             />
-            <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 900 650" fill="none" aria-hidden="true">
+            <img
+              src="./gez-baku-evening.webp"
+              alt="The miniature Baku neighbourhood at calm blue hour"
+              aria-hidden={sceneMode !== 'evening'}
+              width="1536"
+              height="1024"
+              decoding="async"
+              className={`gez-scene-image gez-scene-evening absolute inset-0 h-full w-full object-cover object-center ${sceneMode === 'evening' ? 'is-active' : ''}`}
+            />
+            <div className="gez-scene-wash pointer-events-none absolute inset-0" aria-hidden="true" />
+            <svg key={sceneMode} className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 900 650" fill="none" aria-hidden="true">
               <path className="gez-route-line" d="M438 476c73 52 188 73 274 8 55-42 16-88-38-100" stroke="#E68A68" strokeWidth="4" strokeLinecap="round" />
             </svg>
           </div>
           <div className="gez-float-card absolute bottom-[3%] left-[-2%] z-10 max-w-[260px] rounded-[24px] border border-[#ded8cc] bg-[#fffaf1]/95 p-4 backdrop-blur-sm sm:left-[1%] sm:max-w-[300px]">
             <div className="flex items-center justify-between gap-4">
               <span className="flex items-center gap-2 text-[0.66rem] font-bold uppercase tracking-[0.15em] text-[#657068]"><span className="relative size-2 rounded-full bg-[#8ca27f]"><span className="gez-live-ping absolute inset-0 animate-ping rounded-full bg-[#8ca27f]" /></span>{local.live}</span>
-              <span className="text-xs font-semibold text-[#7b837d]">27 min</span>
+              <span className="text-xs font-semibold text-[#7b837d]">{activeScene.condition}</span>
             </div>
-            <p className="mt-3 text-sm font-bold">{local.place}</p>
+            <p className="mt-3 flex items-center justify-between gap-3 text-sm font-bold"><span>{local.place}</span><span className="text-xs font-semibold text-[#8a938c]">{activeScene.time}</span></p>
             <div className="mt-3 h-1 overflow-hidden rounded-full bg-[#e7e1d6]"><div className="gez-progress h-full w-2/3 rounded-full bg-[#e68a68]" /></div>
           </div>
           <div className="gez-update-card absolute right-[-1%] top-[5%] z-10 hidden w-[218px] rounded-[24px] border border-[#ded8cc] bg-[#f6f1e7]/95 p-4 sm:block">
             <p className="text-[0.62rem] font-bold uppercase tracking-[0.16em] text-[#8a938c]">{local.update}</p>
-            <p className="mt-3 text-sm font-semibold leading-5">{local.note}</p>
+            <p className="mt-3 text-sm font-semibold leading-5" aria-live="polite">{activeScene.note}</p>
           </div>
         </div>
       </section>
