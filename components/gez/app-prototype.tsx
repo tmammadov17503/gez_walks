@@ -21,6 +21,7 @@ import {
   Navigation,
   Phone,
   Plus,
+  Share2,
   ShieldCheck,
   Star,
   UserRound,
@@ -74,7 +75,7 @@ const appText: Record<GezLocale, Record<string, string>> = {
     editDog: 'Edit profile', today: 'Today', tomorrow: 'Tomorrow', date: 'Date', time: 'Time', duration: 'Duration', district: 'District',
     all: 'All Baku', available: 'available for Milo', details: 'View profile', with: 'with', pickup: 'Pickup instructions', apartment: 'Apartment / building',
     special: 'Special instructions', summary: 'Walk summary', received: 'Nigar has received your request.', simulate: 'This demo lets you advance every stage.',
-    message: 'Message Nigar', urgent: 'Call if urgent', route: 'Live route', water: 'Water break', photo: 'Photo added', heading: 'Heading home',
+    message: 'Message Nigar', urgent: 'Call if urgent', share: 'Share walk update', shared: 'A privacy-safe walk update is ready to share.', route: 'Live route', water: 'Water break', photo: 'Photo added', heading: 'Heading home',
     report: 'Walk report', bathroom: 'Bathroom', photos: 'Photos', note: "Nigar's note", rate: 'Rate Nigar', history: 'Walk history',
     account: 'Prototype account', signout: 'Sign out of demo', conditions: 'Walk conditions', save: 'Save changes', formNote: 'The details that help a walker understand Milo.',
     back: 'Back', backToSignIn: 'Back to sign in', backToDog: 'Back to Milo', dogDetails: 'Dog details',
@@ -85,7 +86,7 @@ const appText: Record<GezLocale, Record<string, string>> = {
     editDog: 'Profili düzəlt', today: 'Bu gün', tomorrow: 'Sabah', date: 'Tarix', time: 'Vaxt', duration: 'Müddət', district: 'Rayon',
     all: 'Bütün Bakı', available: 'Milo üçün uyğundur', details: 'Profilə bax', with: 'ilə', pickup: 'Götürmə təlimatı', apartment: 'Mənzil / bina',
     special: 'Xüsusi təlimat', summary: 'Gəzinti xülasəsi', received: 'Nigar sorğunu aldı.', simulate: 'Demoda hər mərhələni irəli apara bilərsən.',
-    message: 'Nigara yaz', urgent: 'Təcili zəng', route: 'Canlı marşrut', water: 'Su fasiləsi', photo: 'Foto əlavə edildi', heading: 'Evə qayıdırlar',
+    message: 'Nigara yaz', urgent: 'Təcili zəng', share: 'Gəzinti xəbərini paylaş', shared: 'Məxfiliyi qoruyan gəzinti xəbəri paylaşmağa hazırdır.', route: 'Canlı marşrut', water: 'Su fasiləsi', photo: 'Foto əlavə edildi', heading: 'Evə qayıdırlar',
     report: 'Gəzinti hesabatı', bathroom: 'Tualet', photos: 'Fotolar', note: 'Nigarın qeydi', rate: 'Nigarı qiymətləndir', history: 'Gəzinti tarixçəsi',
     account: 'Prototip hesabı', signout: 'Demodan çıx', conditions: 'Gəzinti şəraiti', save: 'Dəyişiklikləri saxla', formNote: 'Gəzdiricinin Milonu tanımasına kömək edən detallar.',
     back: 'Geri', backToSignIn: 'Girişə qayıt', backToDog: 'Milonun profilinə qayıt', dogDetails: 'İt məlumatları',
@@ -96,7 +97,7 @@ const appText: Record<GezLocale, Record<string, string>> = {
     editDog: 'Изменить профиль', today: 'Сегодня', tomorrow: 'Завтра', date: 'Дата', time: 'Время', duration: 'Длительность', district: 'Район',
     all: 'Весь Баку', available: 'подходит Майло', details: 'Открыть профиль', with: 'с', pickup: 'Как забрать собаку', apartment: 'Квартира / дом',
     special: 'Особые инструкции', summary: 'Итог прогулки', received: 'Нигяр получила запрос.', simulate: 'В демо можно пройти каждый этап.',
-    message: 'Написать Нигяр', urgent: 'Срочный звонок', route: 'Живой маршрут', water: 'Перерыв на воду', photo: 'Добавлено фото', heading: 'Возвращаются домой',
+    message: 'Написать Нигяр', urgent: 'Срочный звонок', share: 'Поделиться обновлением', shared: 'Обновление без личных данных готово к отправке.', route: 'Живой маршрут', water: 'Перерыв на воду', photo: 'Добавлено фото', heading: 'Возвращаются домой',
     report: 'Отчёт о прогулке', bathroom: 'Туалет', photos: 'Фото', note: 'Заметка Нигяр', rate: 'Оценить Нигяр', history: 'История прогулок',
     account: 'Демо-аккаунт', signout: 'Выйти из демо', conditions: 'Условия прогулки', save: 'Сохранить', formNote: 'Детали, которые помогут лучше понять Майло.',
     back: 'Назад', backToSignIn: 'Вернуться ко входу', backToDog: 'Вернуться к Майло', dogDetails: 'Данные собаки',
@@ -302,6 +303,7 @@ export function AppPrototype({ copy, locale, onLocaleChange, onExit }: AppProtot
   const [completedBooking, setCompletedBooking] = useState<WalkSnapshot | null>(null);
   const [preparation, setPreparation] = useState<PreparationItem[]>([]);
   const [bookingError, setBookingError] = useState(false);
+  const [shareFeedback, setShareFeedback] = useState(false);
   const connections = useWalkerConnections();
   const t = appText[locale];
   const conditions = getWalkConditions(Number(time.split(':')[0]) < 17 ? 33 : 28);
@@ -371,7 +373,23 @@ export function AppPrototype({ copy, locale, onLocaleChange, onExit }: AppProtot
 
   const finishWalk = () => {
     if (activeBooking) setCompletedBooking(activeBooking);
+    setShareFeedback(false);
     setStatus('completed');
+  };
+
+  const shareWalkUpdate = async () => {
+    const shareText = `${sessionCopy.liveTitle} ${activeWalker.name} · ${displayBooking.duration} min · GƏZ Walks`;
+
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: 'GƏZ Walks', text: shareText });
+      } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(shareText);
+      }
+      setShareFeedback(true);
+    } catch {
+      setShareFeedback(false);
+    }
   };
 
   if (gate === 'phone') return <SignInGate copy={copy} onComplete={finishSignIn} onBack={onExit} />;
@@ -422,7 +440,7 @@ export function AppPrototype({ copy, locale, onLocaleChange, onExit }: AppProtot
     return (
       <main className="gez-screen-safe min-h-dvh bg-[#f6f1e7] px-4 py-4 sm:px-8 sm:py-6">
         <div className="mx-auto max-w-[1200px]">
-          <div className="mb-6 flex items-center justify-between"><button onClick={() => setStatus('accepted')} className="grid size-11 place-items-center rounded-full border border-[#d8d3c7]"><ArrowLeft className="size-4" /></button><GezLogo /><span className="rounded-full bg-[#f0ddcf] px-3 py-2 text-[0.65rem] font-bold text-[#8c523f]">LIVE</span></div>
+          <div className="mb-6 flex items-center justify-between"><button onClick={() => { setShareFeedback(false); setStatus('accepted'); }} className="grid size-11 place-items-center rounded-full border border-[#d8d3c7]"><ArrowLeft className="size-4" /></button><GezLogo /><span className="rounded-full bg-[#f0ddcf] px-3 py-2 text-[0.65rem] font-bold text-[#8c523f]">LIVE</span></div>
           <div className="grid gap-6 lg:grid-cols-[1.35fr_.65fr]">
             <div><h1 className="font-display mb-6 text-4xl font-medium tracking-[-0.045em] sm:text-6xl">{sessionCopy.liveTitle}</h1><LiveMap progress={routeProgress} walker={activeWalker} snapshot={displayBooking} locale={locale} /></div>
             <aside className="flex flex-col gap-4 lg:pt-24">
@@ -430,6 +448,8 @@ export function AppPrototype({ copy, locale, onLocaleChange, onExit }: AppProtot
               <div className={`overflow-hidden rounded-[26px] border border-[#ddd7cc] bg-[#fffaf1] transition ${routeProgress > 35 ? 'opacity-100' : 'opacity-40'}`}><img src="./gez-milo-3d.webp" alt={`${displayBooking.dogName} enjoying a simulated walk`} className="aspect-[1.65] w-full object-cover" /><p className="p-4 text-sm leading-6">{sessionCopy.photo}</p></div>
               <button onClick={() => routeProgress >= 82 ? finishWalk() : setRouteProgress((value) => Math.min(85, value + 28))} className="h-13 rounded-full bg-[#31483b] text-sm font-bold text-white">{routeProgress >= 82 ? 'Finish walk' : 'Next route update'}</button>
               <div className="grid grid-cols-2 gap-2"><button className="h-12 rounded-full border border-[#d8d3c7] text-xs font-bold"><MessageCircle className="mr-2 inline size-4" />{sessionCopy.message}</button><button className="h-12 rounded-full border border-[#d8d3c7] text-xs font-bold"><Phone className="mr-2 inline size-4" />{t.urgent}</button></div>
+              <button onClick={shareWalkUpdate} className="h-12 rounded-full border border-[#bfc9ba] bg-[#eef2e9] text-xs font-bold text-[#31483b]"><Share2 className="mr-2 inline size-4" />{t.share}</button>
+              {shareFeedback && <output aria-live="polite" className="rounded-2xl bg-[#e5ebdf] px-4 py-3 text-center text-xs font-semibold text-[#536256]">{t.shared}</output>}
             </aside>
           </div>
         </div>

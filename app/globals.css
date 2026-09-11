@@ -173,57 +173,36 @@
 .gez-hero-paw:nth-child(3) { --paw-rotate: 42deg; bottom: 8%; left: 35%; width: 4rem; animation-delay: -4s; }
 .gez-hero-paw:nth-child(4) { --paw-rotate: -18deg; right: 31%; top: 5%; width: 3.5rem; animation-delay: -7s; animation-duration: 9s; }
 .gez-hero-paw:nth-child(5) { --paw-rotate: 18deg; bottom: 18%; right: -1%; width: 4.25rem; animation-delay: -1s; }
-[data-motion='paused'] .gez-hero-paw,
-[data-motion='paused'] .gez-float-card,
-[data-motion='paused'] .gez-progress,
-[data-motion='paused'] .gez-route-line,
-[data-motion='paused'] .gez-live-ping,
-[data-motion='paused'] .gez-reassurance-window,
-[data-motion='paused'] .gez-reassurance-route { animation-play-state: paused; }
-[data-motion='paused'] .gez-scene-image,
-[data-motion='paused'] .gez-scene-wash,
-[data-motion='paused'] .gez-scene-option,
-[data-motion='paused'] .gez-living-video,
-[data-motion='paused'] .gez-living-trigger,
-[data-motion='paused'] .gez-reassurance-cta { transition: none; }
-.gez-hero-stage { perspective: 1400px; transform-style: preserve-3d; }
+.gez-hero-stage { isolation: isolate; }
 .gez-hero-model {
-  transform: rotateX(1deg) rotateY(-1.8deg);
-  transform-style: preserve-3d;
-  transition: transform .8s cubic-bezier(.22,.8,.24,1), filter .8s ease;
+  transform: none;
+  transition: filter .8s ease;
   filter: drop-shadow(0 30px 42px #31483b14);
 }
 .gez-scene-image {
-  opacity: 0;
-  transform: scale(1.018);
-  transition: opacity .75s ease, transform 1.15s cubic-bezier(.22,.8,.24,1), filter .75s ease;
-}
-.gez-scene-image.is-active { opacity: 1; transform: scale(1); }
-.gez-scene-evening { filter: brightness(.82) saturate(.88) contrast(1.04); }
-.gez-living-video {
   z-index: 0;
   opacity: 0;
-  transform: scale(1.012);
-  transition: opacity .6s ease, transform 1s cubic-bezier(.22,.8,.24,1);
+  transform: scale(1.008);
+  transition: opacity 1.8s ease, transform 2.4s cubic-bezier(.22,.8,.24,1), filter 1.8s ease;
 }
-.gez-living-video.is-ready { opacity: 1; transform: scale(1); }
-.gez-scene-wash {
+.gez-scene-image.is-active { opacity: 1; transform: scale(1); }
+.gez-scene-evening { filter: brightness(.78) saturate(.88) contrast(1.05); }
+.gez-scene-video {
   z-index: 1;
   opacity: 0;
+  transition: opacity 1.8s ease, filter 1.8s ease;
+  will-change: opacity;
+}
+.gez-scene-video.is-active { opacity: 1; }
+.gez-scene-video-evening { filter: brightness(.8) saturate(.9) contrast(1.05); }
+.gez-scene-wash {
+  z-index: 2;
+  opacity: 0;
   background: linear-gradient(180deg, #4d667326 0%, #31483b1a 58%, #26362e33 100%);
-  transition: opacity .75s ease;
+  transition: opacity 1.8s ease;
 }
 [data-scene='evening'] .gez-scene-wash { opacity: 1; }
-.gez-scene-controls {
-  transform: translateZ(68px);
-}
-.gez-scene-switch, .gez-living-trigger {
-  box-shadow: 0 18px 36px -28px #26362e8c;
-}
-.gez-scene-option { transition: color .25s ease, background-color .25s ease, transform .25s ease; }
-.gez-scene-option:active { transform: scale(.97); }
-.gez-living-trigger { max-width: 12.5rem; }
-.gez-route-overlay { z-index: 2; }
+.gez-route-overlay { z-index: 3; }
 .gez-reassurance-stage { perspective: 1200px; }
 .gez-reassurance-window {
   transform: rotateY(-2.2deg) rotateX(1deg);
@@ -247,11 +226,10 @@
 @keyframes gez-reassurance-in { from { opacity: 0; transform: rotateY(-4deg) rotateX(2deg) translateY(12px); } to { opacity: 1; transform: rotateY(-2.2deg) rotateX(1deg) translateY(0); } }
 @keyframes gez-reassurance-route { to { stroke-dashoffset: 0; } }
 .gez-update-card {
-  transform: translateZ(58px) rotate(2deg);
+  transform: rotate(1deg);
   box-shadow: 0 22px 46px -34px #31483b73;
   transition: transform .65s cubic-bezier(.22,.8,.24,1);
 }
-[data-motion='paused'] .gez-hero-model { transform: none; transition: none; }
 .gez-comparison-bar { top: calc(5.25rem + var(--gez-safe-top)); }
 .gez-depth-grid { perspective: 1200px; }
 .gez-depth-card { transition: transform .45s ease, box-shadow .45s ease, border-color .45s ease; }
@@ -259,8 +237,8 @@
 .gez-trust-step { transition: transform .3s ease, background-color .3s ease; }
 
 @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-  [data-motion='running'] .gez-hero-stage:hover .gez-hero-model { transform: rotateX(-.7deg) rotateY(1deg) scale(1.008); filter: drop-shadow(0 34px 48px #31483b20); }
-  [data-motion='running'] .gez-hero-stage:hover .gez-update-card { transform: translateZ(72px) rotate(0deg) translateY(-3px); }
+  .gez-hero-stage:hover .gez-hero-model { filter: drop-shadow(0 34px 48px #31483b20); }
+  .gez-hero-stage:hover .gez-update-card { transform: rotate(0deg) translateY(-3px); }
   .gez-depth-card:hover { transform: translateY(-6px) rotateX(2deg); border-color: #b6c2ab; box-shadow: 0 18px 30px -24px #31483b66; }
   .gez-trust-scene:hover { transform: perspective(1200px) rotateY(0deg) translateY(-3px); }
   .gez-trust-step:hover { transform: translateX(4px); }
@@ -271,7 +249,7 @@
   animation: gez-route-draw 3.8s 0.5s cubic-bezier(.22,.8,.24,1) both;
 }
 
-.gez-float-card { animation: gez-float 5.5s ease-in-out infinite; }
+.gez-float-card { transform: none; }
 .gez-progress { animation: gez-progress 4s .6s ease-out both; }
 .gez-safe-top { padding-top: max(1.25rem, var(--gez-safe-top)); }
 .gez-screen-safe {
@@ -317,12 +295,6 @@
   .gez-hero-paw:nth-child(1) { left: auto; right: -8%; top: 16%; width: 3.25rem; }
   .gez-hero-paw:nth-child(2) { right: -4%; top: 65%; width: 4rem; }
   .gez-hero-paw:nth-child(n+3) { display: none; }
-  .gez-motion-control { top: .25rem; }
-  .gez-scene-controls { left: .75rem; right: .75rem; transform: none; }
-  .gez-scene-switch { flex: 1; justify-content: space-between; }
-  .gez-scene-option { flex: 1; justify-content: center; padding-inline: .5rem; }
-  .gez-living-trigger { width: 2.75rem; min-width: 2.75rem; padding-inline: 0; }
-  .gez-living-label { display: none; }
   .gez-comparison-bar { top: calc(4.75rem + var(--gez-safe-top)); }
 }
 
@@ -353,6 +325,6 @@
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
   .gez-paw-sway, .gez-hero-paw, .gez-trust-scene, .gez-hero-model, .gez-update-card, .gez-reassurance-window, .gez-reassurance-route { animation: none; transform: none; }
-  .gez-depth-card, .gez-trust-scene, .gez-trust-step, .gez-hero-model, .gez-update-card, .gez-scene-image, .gez-scene-wash, .gez-scene-option, .gez-living-video { transition: none; }
-  .gez-motion-control, .gez-living-trigger, .gez-living-video { display: none; }
+  .gez-depth-card, .gez-trust-scene, .gez-trust-step, .gez-hero-model, .gez-update-card, .gez-scene-image, .gez-scene-video, .gez-scene-wash { transition: none; }
+  .gez-scene-video { display: none; }
 }
