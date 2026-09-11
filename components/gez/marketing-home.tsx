@@ -2,7 +2,7 @@
 
 /* eslint-disable next/no-img-element */
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ArrowDownRight,
   ArrowRight,
@@ -12,11 +12,14 @@ import {
   Pause,
   Play,
   ShieldCheck,
+  Sparkles,
+  Square,
   Sun,
   X,
 } from 'lucide-react';
 import { GezLogo } from '@/components/gez-logo';
 import { planningCopy } from './planning-copy';
+import { ReassuranceJourney } from './reassurance-journey';
 import type { GezCopy, GezLocale } from '@/lib/gez-prototype';
 
 type MarketingHomeProps = {
@@ -35,6 +38,8 @@ const supportingCopy: Record<GezLocale, {
   sceneLabel: string;
   sceneDay: string;
   sceneEvening: string;
+  playScene: string;
+  stopScene: string;
   scenes: Record<HeroScene, { time: string; condition: string; note: string }>;
   steps: [string, string, string];
   stepCopy: [string, string, string];
@@ -44,6 +49,7 @@ const supportingCopy: Record<GezLocale, {
   en: {
     live: 'Walk in progress', place: 'Yasamal · Central Park', update: 'A little update',
     sceneLabel: 'Walk atmosphere', sceneDay: 'Day', sceneEvening: 'Evening',
+    playScene: 'Play living Baku scene', stopScene: 'Stop living Baku scene',
     scenes: {
       day: { time: '16:30', condition: '28°C · Comfortable', note: 'Milo had water and is taking the shaded route home.' },
       evening: { time: '19:30', condition: '24°C · Cooler pavement', note: 'A calm blue-hour loop, with cooler pavement on the way home.' },
@@ -56,6 +62,7 @@ const supportingCopy: Record<GezLocale, {
   az: {
     live: 'Gəzinti gedir', place: 'Yasamal · Mərkəzi Park', update: 'Kiçik bir xəbər',
     sceneLabel: 'Gəzinti ab-havası', sceneDay: 'Gündüz', sceneEvening: 'Axşam',
+    playScene: 'Canlı Bakı səhnəsini oynat', stopScene: 'Canlı Bakı səhnəsini dayandır',
     scenes: {
       day: { time: '16:30', condition: '28°C · Rahat', note: 'Milo su içdi və indi kölgəli yolla evə qayıdır.' },
       evening: { time: '19:30', condition: '24°C · Səki sərindir', note: 'Milo axşam işığında sakit dövrə vurur, evə gedən yol daha sərindir.' },
@@ -68,6 +75,7 @@ const supportingCopy: Record<GezLocale, {
   ru: {
     live: 'Прогулка идёт', place: 'Ясамал · Центральный парк', update: 'Небольшое обновление',
     sceneLabel: 'Время прогулки', sceneDay: 'День', sceneEvening: 'Вечер',
+    playScene: 'Запустить живую сцену Баку', stopScene: 'Остановить живую сцену Баку',
     scenes: {
       day: { time: '16:30', condition: '28°C · Комфортно', note: 'Майло попил воды и возвращается домой по тенистой дороге.' },
       evening: { time: '19:30', condition: '24°C · Прохладный асфальт', note: 'Спокойный вечерний круг и прохладная дорога по пути домой.' },
@@ -84,16 +92,64 @@ export function MarketingHome({ copy, locale, onLocaleChange, onStart }: Marketi
   const [applied, setApplied] = useState(false);
   const [motionPaused, setMotionPaused] = useState(false);
   const [sceneMode, setSceneMode] = useState<HeroScene>('day');
+  const [livingActive, setLivingActive] = useState(false);
+  const [livingReady, setLivingReady] = useState(false);
+  const [reduceMotion, setReduceMotion] = useState(false);
+  const livingVideoRef = useRef<HTMLVideoElement>(null);
   const local = supportingCopy[locale];
   const activeScene = local.scenes[sceneMode];
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const syncMotionPreference = () => {
+      setReduceMotion(mediaQuery.matches);
+      if (mediaQuery.matches) {
+        setLivingActive(false);
+        setLivingReady(false);
+      }
+    };
+    syncMotionPreference();
+    mediaQuery.addEventListener('change', syncMotionPreference);
+    return () => mediaQuery.removeEventListener('change', syncMotionPreference);
+  }, []);
+
+  useEffect(() => {
+    const video = livingVideoRef.current;
+    if (!video || !livingActive) return;
+    if (motionPaused || reduceMotion) {
+      video.pause();
+      return;
+    }
+    void video.play().catch(() => {
+      setLivingActive(false);
+      setLivingReady(false);
+    });
+  }, [livingActive, motionPaused, reduceMotion]);
 
   const goTo = (id: string) => {
     setMenuOpen(false);
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const selectScene = (scene: HeroScene) => {
+    setLivingActive(false);
+    setLivingReady(false);
+    setSceneMode(scene);
+  };
+
+  const toggleLivingScene = () => {
+    if (livingActive) {
+      setLivingActive(false);
+      setLivingReady(false);
+      return;
+    }
+    if (reduceMotion) return;
+    setSceneMode('day');
+    setLivingActive(true);
+  };
+
   return (
-    <main data-motion={motionPaused ? 'paused' : 'running'} data-scene={sceneMode} className="min-h-dvh overflow-x-clip bg-[#f6f1e7] text-[#26362e]">
+    <main data-motion={motionPaused ? 'paused' : 'running'} data-scene={sceneMode} data-living={livingActive ? 'active' : 'still'} className="min-h-dvh overflow-x-clip bg-[#f6f1e7] text-[#26362e]">
       <header className="gez-safe-top relative z-40 mx-auto flex w-full max-w-[1480px] items-center justify-between px-5 pb-5 sm:px-8 lg:px-12">
         <a href="#top" aria-label="GƏZ home"><GezLogo /></a>
 
@@ -173,28 +229,38 @@ export function MarketingHome({ copy, locale, onLocaleChange, onStart }: Marketi
         </div>
 
         <div className="gez-hero-stage relative z-[1] min-h-[360px] sm:min-h-[500px] lg:min-h-[650px]">
-          <fieldset className="gez-scene-switch absolute left-4 top-4 z-20 flex rounded-full border border-white/60 bg-[#fffaf1]/90 p-1 backdrop-blur-md sm:left-6 sm:top-6">
-            <legend className="sr-only">{local.sceneLabel}</legend>
-            {(['day', 'evening'] as const).map((scene) => {
-              const isDay = scene === 'day';
-              const label = isDay ? local.sceneDay : local.sceneEvening;
-              const Icon = isDay ? Sun : Moon;
-              return (
-                <button
-                  key={scene}
-                  type="button"
-                  aria-pressed={sceneMode === scene}
-                  aria-label={`${label}, ${local.scenes[scene].time}`}
-                  onClick={() => setSceneMode(scene)}
-                  className={`gez-scene-option inline-flex min-h-10 items-center gap-1.5 rounded-full px-3 text-[0.68rem] font-bold transition sm:px-3.5 ${sceneMode === scene ? 'bg-[#31483b] text-white' : 'text-[#5f6962] hover:bg-white/70'}`}
-                >
-                  <Icon className="size-3.5" aria-hidden="true" />
-                  <span>{label}</span>
-                  <span className={sceneMode === scene ? 'text-white/65' : 'text-[#8a938c]'}>{local.scenes[scene].time}</span>
-                </button>
-              );
-            })}
-          </fieldset>
+          <div className="gez-scene-controls absolute left-4 top-4 z-20 flex items-center gap-2 sm:left-6 sm:top-6">
+            <fieldset className="gez-scene-switch flex rounded-full border border-white/60 bg-[#fffaf1]/90 p-1 backdrop-blur-md">
+              <legend className="sr-only">{local.sceneLabel}</legend>
+              {(['day', 'evening'] as const).map((scene) => {
+                const isDay = scene === 'day';
+                const label = isDay ? local.sceneDay : local.sceneEvening;
+                const Icon = isDay ? Sun : Moon;
+                return (
+                  <button
+                    key={scene}
+                    type="button"
+                    aria-pressed={sceneMode === scene}
+                    onClick={() => selectScene(scene)}
+                    className={`gez-scene-option inline-flex min-h-11 items-center gap-2 rounded-full px-3 text-xs font-bold transition ${sceneMode === scene ? 'bg-[#31483b] text-[#fffaf1]' : 'text-[#657068] hover:bg-white/70'}`}
+                  >
+                    <Icon className="size-3.5" aria-hidden="true" />
+                    {label}
+                  </button>
+                );
+              })}
+            </fieldset>
+            <button
+              type="button"
+              aria-pressed={livingActive}
+              onClick={toggleLivingScene}
+              className="gez-living-trigger inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-white/60 bg-[#31483b]/95 px-3 text-xs font-bold text-[#fffaf1] backdrop-blur-md transition hover:bg-[#24372d]"
+              aria-label={livingActive ? local.stopScene : local.playScene}
+            >
+              {livingActive ? <Square className="size-3.5 fill-current" aria-hidden="true" /> : <Sparkles className="size-4" aria-hidden="true" />}
+              <span className="gez-living-label">{livingActive ? local.stopScene : local.playScene}</span>
+            </button>
+          </div>
           <div className="gez-hero-model absolute inset-x-[-7%] top-[3%] h-[92%] overflow-hidden rounded-[52px] bg-[#efe8dc] lg:inset-x-[-4%]">
             <img
               src="./gez-baku-model.png"
@@ -211,8 +277,27 @@ export function MarketingHome({ copy, locale, onLocaleChange, onStart }: Marketi
               decoding="async"
               className={`gez-scene-image gez-scene-evening absolute inset-0 h-full w-full object-cover object-center ${sceneMode === 'evening' ? 'is-active' : ''}`}
             />
+            {livingActive && (
+              <video
+                ref={livingVideoRef}
+                className={`gez-living-video absolute inset-0 h-full w-full object-cover object-center ${livingReady ? 'is-ready' : ''}`}
+                src="./gez-baku-living.mp4"
+                poster="./gez-baku-model.png"
+                muted
+                loop
+                playsInline
+                autoPlay
+                preload="auto"
+                aria-hidden="true"
+                onCanPlay={() => setLivingReady(true)}
+                onError={() => {
+                  setLivingActive(false);
+                  setLivingReady(false);
+                }}
+              />
+            )}
             <div className="gez-scene-wash pointer-events-none absolute inset-0" aria-hidden="true" />
-            <svg key={sceneMode} className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 900 650" fill="none" aria-hidden="true">
+            <svg key={`${sceneMode}-${livingActive}`} className="gez-route-overlay pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 900 650" fill="none" aria-hidden="true">
               <path className="gez-route-line" d="M438 476c73 52 188 73 274 8 55-42 16-88-38-100" stroke="#E68A68" strokeWidth="4" strokeLinecap="round" />
             </svg>
           </div>
@@ -252,6 +337,8 @@ export function MarketingHome({ copy, locale, onLocaleChange, onStart }: Marketi
           </div>
         </div>
       </section>
+
+      <ReassuranceJourney locale={locale} onStart={onStart} />
 
       <section id="trust" className="relative bg-[#31483b] px-5 py-20 text-[#fbf7ef] sm:px-8 lg:px-12 lg:py-24">
         <div className="mx-auto grid max-w-[1320px] items-center gap-10 lg:grid-cols-[1.08fr_.92fr] lg:gap-16">

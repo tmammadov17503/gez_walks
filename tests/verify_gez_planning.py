@@ -37,22 +37,39 @@ with sync_playwright() as p:
             page.screenshot(path=str(args.screenshots / f'hero-evening-{width}.png'))
         day_scene.click()
         expect(day_scene).to_have_attribute('aria-pressed', 'true')
+        play_living_scene = page.get_by_role('button', name='Play living Baku scene')
+        expect(play_living_scene).to_be_visible()
+        play_living_scene.click()
+        living_video = page.locator('.gez-living-video')
+        expect(living_video).to_be_visible()
+        expect(living_video).to_have_attribute('autoplay', '')
+        assert living_video.evaluate('(e) => e.muted && e.loop && e.playsInline')
+        expect(page.get_by_role('button', name='Stop living Baku scene')).to_be_visible()
         expect(page.get_by_role('button', name='Pause motion')).to_be_visible()
         page.get_by_role('button', name='Pause motion').click()
-        evening_scene.click()
+        page.wait_for_timeout(100)
+        assert living_video.evaluate('(e) => e.paused')
         assert evening_image.evaluate('(e) => getComputedStyle(e).transitionDuration') == '0s'
-        day_scene.click()
         assert page.locator('.gez-hero-paw').first.evaluate('(e) => getComputedStyle(e).animationPlayState') == 'paused'
         assert page.locator('.gez-live-ping').evaluate('(e) => getComputedStyle(e).animationPlayState') == 'paused'
         if width >= 600:
             page.locator('.gez-hero-stage').hover()
         assert page.locator('.gez-hero-model').evaluate('(e) => getComputedStyle(e).transform') == 'none'
         page.get_by_role('button', name='Resume motion').click()
+        page.wait_for_function("document.querySelector('.gez-living-video') && !document.querySelector('.gez-living-video').paused")
+        evening_scene.click()
+        expect(living_video).to_have_count(0)
+        expect(evening_scene).to_have_attribute('aria-pressed', 'true')
+        day_scene.click()
+        page.get_by_role('button', name='Play living Baku scene').click()
+        expect(page.locator('.gez-living-video')).to_be_visible()
         if args.screenshots:
             args.screenshots.mkdir(parents=True, exist_ok=True)
             page.screenshot(path=str(args.screenshots / f'hero-{width}.png'))
         page.emulate_media(reduced_motion='reduce')
+        expect(page.locator('.gez-living-video')).to_have_count(0)
         assert page.locator('.gez-hero-paw').first.evaluate('(e) => getComputedStyle(e).animationName') == 'none'
+        expect(page.get_by_role('button', name='Play living Baku scene')).to_be_hidden()
         assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
 
         page.locator('#top').get_by_role('button', name='Find a walker', exact=True).click()
