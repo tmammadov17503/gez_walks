@@ -75,7 +75,7 @@ export function ReassuranceJourney({ locale, onStart }: { locale: GezLocale; onS
   const active = t.stages[stage];
 
   return (
-    <section aria-label={t.aria} className="gez-reassurance-section relative overflow-hidden bg-[#ebe5d8] px-5 py-20 sm:px-8 lg:px-12 lg:py-28">
+    <section aria-label={t.aria} className="gez-reassurance-section gez-deferred-section relative overflow-hidden bg-[#ebe5d8] px-5 py-20 sm:px-8 lg:px-12 lg:py-28">
       <div className="mx-auto grid max-w-[1320px] items-center gap-12 lg:grid-cols-[.82fr_1.18fr] lg:gap-20">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#7b887f]">{t.eyebrow}</p>

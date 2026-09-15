@@ -61,7 +61,7 @@ The Python browser checks require Playwright and installed Chromium/WebKit engin
 
 ## Generated artwork
 
-`public/gez-paw-high-five.png` was created with the built-in image-generation tool. Its original transparent alpha channel is preserved. The existing `gez-dog-care-3d.webp` scene is reused in the trust section.
+`public/gez-paw-high-five.webp` is the delivery-optimized transparent version of the generated paw artwork. Responsive WebP variants of the Baku model keep the opening scene crisp without loading or decoding background video. The existing `gez-dog-care-3d.webp` scene is reused in the trust section.
 
 Final generation prompt:
 

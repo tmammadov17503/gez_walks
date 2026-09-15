@@ -2,7 +2,7 @@
 
 /* eslint-disable next/no-img-element */
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   ArrowDownRight,
   ArrowRight,
@@ -22,13 +22,11 @@ type MarketingHomeProps = {
   onStart: () => void;
 };
 
-type HeroScene = 'day' | 'evening';
-
 const supportingCopy: Record<GezLocale, {
   live: string;
   place: string;
   update: string;
-  scenes: Record<HeroScene, { time: string; condition: string; note: string }>;
+  scene: { time: string; condition: string; note: string };
   steps: [string, string, string];
   stepCopy: [string, string, string];
   trust: string[];
@@ -36,10 +34,7 @@ const supportingCopy: Record<GezLocale, {
 }> = {
   en: {
     live: 'Walk in progress', place: 'Yasamal · Central Park', update: 'A little update',
-    scenes: {
-      day: { time: '16:30', condition: '28°C · Comfortable', note: 'Milo had water and is taking the shaded route home.' },
-      evening: { time: '19:30', condition: '24°C · Cooler pavement', note: 'A calm blue-hour loop, with cooler pavement on the way home.' },
-    },
+    scene: { time: '16:30', condition: '28°C · Comfortable', note: 'Milo had water and is taking the shaded route home.' },
     steps: ['Create your dog', 'Choose the right person', 'Follow the walk'],
     stepCopy: ['Share the little things that make your dog themselves.', 'Meet first, ask questions, and choose with confidence.', 'See the route and receive a thoughtful report afterward.'],
     trust: ['Identity check', 'Interview', 'References', 'Dog-handling education', 'Trial walk', 'Community ratings'],
@@ -47,10 +42,7 @@ const supportingCopy: Record<GezLocale, {
   },
   az: {
     live: 'Gəzinti gedir', place: 'Yasamal · Mərkəzi Park', update: 'Kiçik bir xəbər',
-    scenes: {
-      day: { time: '16:30', condition: '28°C · Rahat', note: 'Milo su içdi və indi kölgəli yolla evə qayıdır.' },
-      evening: { time: '19:30', condition: '24°C · Səki sərindir', note: 'Milo axşam işığında sakit dövrə vurur, evə gedən yol daha sərindir.' },
-    },
+    scene: { time: '16:30', condition: '28°C · Rahat', note: 'Milo su içdi və indi kölgəli yolla evə qayıdır.' },
     steps: ['İtinin profilini yarat', 'Doğru insanı seç', 'Gəzintini izlə'],
     stepCopy: ['İtini onun özü edən kiçik detalları bizimlə paylaş.', 'Əvvəlcə tanış ol, suallarını ver və rahat seçim et.', 'Marşrutu gör və sonda gözəl gəzinti hesabatı al.'],
     trust: ['Şəxsiyyət yoxlanışı', 'Müsahibə', 'Tövsiyələr', 'İt davranışı üzrə təlim', 'Sınaq gəzintisi', 'İcma rəyləri'],
@@ -58,10 +50,7 @@ const supportingCopy: Record<GezLocale, {
   },
   ru: {
     live: 'Прогулка идёт', place: 'Ясамал · Центральный парк', update: 'Небольшое обновление',
-    scenes: {
-      day: { time: '16:30', condition: '28°C · Комфортно', note: 'Майло попил воды и возвращается домой по тенистой дороге.' },
-      evening: { time: '19:30', condition: '24°C · Прохладный асфальт', note: 'Спокойный вечерний круг и прохладная дорога по пути домой.' },
-    },
+    scene: { time: '16:30', condition: '28°C · Комфортно', note: 'Майло попил воды и возвращается домой по тенистой дороге.' },
     steps: ['Создайте профиль', 'Выберите человека', 'Следите за прогулкой'],
     stepCopy: ['Расскажите о мелочах, которые делают вашу собаку особенной.', 'Сначала познакомьтесь, задайте вопросы и спокойно выбирайте.', 'Смотрите маршрут и получите красивый отчёт после прогулки.'],
     trust: ['Проверка личности', 'Интервью', 'Рекомендации', 'Обучение обращению с собаками', 'Пробная прогулка', 'Отзывы сообщества'],
@@ -72,30 +61,8 @@ const supportingCopy: Record<GezLocale, {
 export function MarketingHome({ copy, locale, onLocaleChange, onStart }: MarketingHomeProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [applied, setApplied] = useState(false);
-  const [sceneMode, setSceneMode] = useState<HeroScene>('day');
-  const [videoReady, setVideoReady] = useState<Record<HeroScene, boolean>>({ day: false, evening: false });
-  const [reduceMotion, setReduceMotion] = useState(false);
   const local = supportingCopy[locale];
-  const activeScene = local.scenes[sceneMode];
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const syncMotionPreference = () => {
-      setReduceMotion(mediaQuery.matches);
-      if (mediaQuery.matches) setSceneMode('day');
-    };
-    syncMotionPreference();
-    mediaQuery.addEventListener('change', syncMotionPreference);
-    return () => mediaQuery.removeEventListener('change', syncMotionPreference);
-  }, []);
-
-  useEffect(() => {
-    if (reduceMotion) return;
-    const cycle = window.setInterval(() => {
-      setSceneMode((current) => current === 'day' ? 'evening' : 'day');
-    }, 9000);
-    return () => window.clearInterval(cycle);
-  }, [reduceMotion]);
+  const activeScene = local.scene;
 
   const goTo = (id: string) => {
     setMenuOpen(false);
@@ -103,7 +70,7 @@ export function MarketingHome({ copy, locale, onLocaleChange, onStart }: Marketi
   };
 
   return (
-    <main data-scene={sceneMode} className="min-h-dvh overflow-x-clip bg-[#f6f1e7] text-[#26362e]">
+    <main className="min-h-dvh overflow-x-clip bg-[#f6f1e7] text-[#26362e]">
       <header className="gez-safe-top relative z-40 mx-auto flex w-full max-w-[1480px] items-center justify-between px-5 pb-5 sm:px-8 lg:px-12">
         <a href="#top" aria-label="GƏZ home"><GezLogo /></a>
 
@@ -158,7 +125,7 @@ export function MarketingHome({ copy, locale, onLocaleChange, onStart }: Marketi
 
       <section id="top" className="relative mx-auto grid min-h-[calc(100dvh-5.5rem)] max-w-[1480px] items-center gap-8 px-5 pb-16 pt-8 sm:px-8 lg:min-h-[760px] lg:grid-cols-[.8fr_1.2fr] lg:px-12 lg:pb-24 lg:pt-10">
         <div className="gez-hero-paws pointer-events-none absolute inset-0 z-[2]" aria-hidden="true">
-          {[0, 1, 2, 3, 4].map(index => <img key={index} src="./gez-paw-high-five.png" alt="" width="1254" height="1254" decoding="async" className="gez-hero-paw absolute" />)}
+          {[0, 1, 2, 3].map(index => <img key={index} src="./gez-paw-high-five.webp" alt="" width="320" height="320" decoding="async" className="gez-hero-paw absolute" />)}
         </div>
         <div className="relative z-10 max-w-[610px]">
           <p className="mb-7 flex items-center gap-2 text-[0.68rem] font-bold uppercase tracking-[0.19em] text-[#68756d]">
@@ -181,29 +148,15 @@ export function MarketingHome({ copy, locale, onLocaleChange, onStart }: Marketi
 
         <div className="gez-hero-stage relative z-[1] min-h-[360px] sm:min-h-[500px] lg:min-h-[650px]">
           <div className="gez-hero-model absolute inset-x-[-7%] top-[3%] h-[92%] overflow-hidden rounded-[52px] bg-[#efe8dc] lg:inset-x-[-4%]">
-            <img
-              src="./gez-baku-model.png"
-              alt="A miniature Baku neighbourhood with a dog walker following a route home"
-              aria-hidden={sceneMode !== 'day'}
-              className={`gez-scene-image absolute inset-0 h-full w-full object-cover object-center ${sceneMode === 'day' ? 'is-active' : ''}`}
-            />
-            <img
-              src="./gez-baku-evening.webp"
-              alt="The miniature Baku neighbourhood at calm blue hour"
-              aria-hidden={sceneMode !== 'evening'}
-              width="1536"
-              height="1024"
-              decoding="async"
-              className={`gez-scene-image gez-scene-evening absolute inset-0 h-full w-full object-cover object-center ${sceneMode === 'evening' ? 'is-active' : ''}`}
-            />
-            <video data-scene-video="day" className={`gez-scene-video absolute inset-0 h-full w-full object-cover object-center ${sceneMode === 'day' && videoReady.day ? 'is-active' : ''}`} src="./gez-baku-living.mp4" poster="./gez-baku-model.png" muted loop playsInline autoPlay preload="auto" aria-hidden="true" onCanPlay={() => setVideoReady((current) => ({ ...current, day: true }))} />
-            <video data-scene-video="evening" className={`gez-scene-video gez-scene-video-evening absolute inset-0 h-full w-full object-cover object-center ${sceneMode === 'evening' && videoReady.evening ? 'is-active' : ''}`} src="./gez-baku-evening-living.mp4" poster="./gez-baku-evening.webp" muted loop playsInline autoPlay preload="auto" aria-hidden="true" onCanPlay={() => setVideoReady((current) => ({ ...current, evening: true }))} />
-            <div className="gez-scene-wash pointer-events-none absolute inset-0" aria-hidden="true" />
-            <svg key={sceneMode} className="gez-route-overlay pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 900 650" fill="none" aria-hidden="true">
+            <picture>
+              <source media="(max-width: 639px)" srcSet="./gez-baku-model-mobile.webp" />
+              <img src="./gez-baku-model.webp" alt="A miniature Baku neighbourhood with a dog walker following a route home" width="1536" height="1024" fetchPriority="high" decoding="async" className="gez-scene-image absolute inset-0 h-full w-full object-cover object-center" />
+            </picture>
+            <svg className="gez-route-overlay pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 900 650" fill="none" aria-hidden="true">
               <path className="gez-route-line" d="M438 476c73 52 188 73 274 8 55-42 16-88-38-100" stroke="#E68A68" strokeWidth="4" strokeLinecap="round" />
             </svg>
           </div>
-          <div className="gez-float-card absolute bottom-[3%] left-[-2%] z-10 max-w-[260px] rounded-[24px] border border-[#ded8cc] bg-[#fffaf1]/95 p-4 backdrop-blur-sm sm:left-[1%] sm:max-w-[300px]">
+          <div className="gez-float-card absolute bottom-[3%] left-[-2%] z-10 max-w-[260px] rounded-[24px] border border-[#ded8cc] bg-[#fffaf1] p-4 sm:left-[1%] sm:max-w-[300px]">
             <div className="flex items-center justify-between gap-4">
               <span className="flex items-center gap-2 text-[0.66rem] font-bold uppercase tracking-[0.15em] text-[#657068]"><span className="relative size-2 rounded-full bg-[#8ca27f]"><span className="gez-live-ping absolute inset-0 animate-ping rounded-full bg-[#8ca27f]" /></span>{local.live}</span>
               <span className="text-xs font-semibold text-[#7b837d]">{activeScene.condition}</span>
@@ -218,9 +171,9 @@ export function MarketingHome({ copy, locale, onLocaleChange, onStart }: Marketi
         </div>
       </section>
 
-      <section id="how" className="gez-care-section relative isolate overflow-hidden border-y border-[#ded8cc] bg-[#fbf7ef] px-5 pb-44 pt-20 sm:px-8 sm:pb-56 lg:px-12 lg:pt-24">
+      <section id="how" className="gez-care-section gez-deferred-section relative isolate overflow-hidden border-y border-[#ded8cc] bg-[#fbf7ef] px-5 pb-44 pt-20 sm:px-8 sm:pb-56 lg:px-12 lg:pt-24">
         <div className="pointer-events-none absolute -bottom-16 -right-14 z-0 w-56 sm:-right-8 sm:w-72 lg:right-8 lg:w-80" aria-hidden="true">
-          <img src="./gez-paw-high-five.png" alt="" width="1254" height="1254" loading="lazy" decoding="async" className="gez-paw-sway w-full rotate-[-18deg]" />
+          <img src="./gez-paw-high-five.webp" alt="" width="320" height="320" loading="lazy" decoding="async" className="gez-paw-sway w-full rotate-[-18deg]" />
         </div>
         <div className="relative z-10 mx-auto max-w-[1320px]">
           <div className="grid gap-6 lg:grid-cols-[.9fr_1.1fr] lg:items-end">
@@ -242,7 +195,7 @@ export function MarketingHome({ copy, locale, onLocaleChange, onStart }: Marketi
 
       <ReassuranceJourney locale={locale} onStart={onStart} />
 
-      <section id="trust" className="relative bg-[#31483b] px-5 py-20 text-[#fbf7ef] sm:px-8 lg:px-12 lg:py-24">
+      <section id="trust" className="gez-deferred-section relative bg-[#31483b] px-5 py-20 text-[#fbf7ef] sm:px-8 lg:px-12 lg:py-24">
         <div className="mx-auto grid max-w-[1320px] items-center gap-10 lg:grid-cols-[1.08fr_.92fr] lg:gap-16">
           <div>
             <p className="text-[0.67rem] font-bold uppercase tracking-[0.2em] text-[#b9c7ac]">{copy.trustEyebrow}</p>
@@ -263,8 +216,8 @@ export function MarketingHome({ copy, locale, onLocaleChange, onStart }: Marketi
         </div>
       </section>
 
-      <section id="become" className="relative isolate overflow-hidden bg-[#f6f1e7] px-5 py-24 sm:px-8 lg:px-12">
-        <img src="./gez-paw-high-five.png" alt="" aria-hidden="true" width="1254" height="1254" loading="lazy" decoding="async" className="pointer-events-none absolute -left-24 top-2 z-0 w-64 rotate-[35deg] opacity-30 sm:-left-20 sm:top-0 sm:w-80" />
+      <section id="become" className="gez-deferred-section relative isolate overflow-hidden bg-[#f6f1e7] px-5 py-24 sm:px-8 lg:px-12">
+        <img src="./gez-paw-high-five.webp" alt="" aria-hidden="true" width="320" height="320" loading="lazy" decoding="async" className="pointer-events-none absolute -left-24 top-2 z-0 w-64 rotate-[35deg] opacity-30 sm:-left-20 sm:top-0 sm:w-80" />
         <div className="relative z-10 mx-auto grid max-w-[1200px] overflow-hidden rounded-[42px] border border-[#d8d3c7] bg-[#ebe5d8] lg:grid-cols-[1fr_.9fr]">
           <div className="p-8 sm:p-12 lg:p-16">
             <span className="inline-flex size-11 items-center justify-center rounded-full bg-[#31483b] text-white"><ShieldCheck className="size-5" /></span>

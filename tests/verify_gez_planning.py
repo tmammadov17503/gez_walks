@@ -17,33 +17,31 @@ with sync_playwright() as p:
         errors = []
         page.on('pageerror', lambda error: errors.append(str(error)))
         page.goto(args.url, wait_until='networkidle')
-        expect(page.locator('.gez-hero-paw')).to_have_count(5)
+        expect(page.locator('.gez-hero-paw')).to_have_count(4)
         expect(page.get_by_role('button', name='Pause motion')).to_have_count(0)
         expect(page.get_by_role('button', name='Play living Baku scene')).to_have_count(0)
         expect(page.get_by_role('group', name='Walk atmosphere')).to_have_count(0)
-        scene_videos = page.locator('.gez-scene-video')
-        expect(scene_videos).to_have_count(2)
-        day_video = page.locator('[data-scene-video="day"]')
-        evening_video = page.locator('[data-scene-video="evening"]')
-        expect(day_video).to_be_visible()
-        for index in range(2):
-            expect(scene_videos.nth(index)).to_have_attribute('autoplay', '')
-            assert scene_videos.nth(index).evaluate('(e) => e.muted && e.loop && e.playsInline')
-        expect(page.locator('main')).to_have_attribute('data-scene', 'day')
-        if width >= 1000:
-            page.wait_for_function("document.querySelector('main')?.dataset.scene === 'evening'", timeout=11000)
-            expect(evening_video).to_be_visible()
-            expect(page.get_by_text('24°C · Cooler pavement', exact=True)).to_be_visible()
-            if args.screenshots:
-                args.screenshots.mkdir(parents=True, exist_ok=True)
-                page.screenshot(path=str(args.screenshots / f'hero-evening-{width}.png'))
-            page.wait_for_function("document.querySelector('main')?.dataset.scene === 'day'", timeout=11000)
+        expect(page.locator('.gez-scene-video')).to_have_count(0)
+        expect(page.locator('[data-scene-video]')).to_have_count(0)
+        expect(page.locator('main[data-scene]')).to_have_count(0)
+        day_image = page.get_by_alt_text('A miniature Baku neighbourhood with a dog walker following a route home')
+        expect(day_image).to_be_visible()
+        expected_asset = 'gez-baku-model-mobile.webp' if width < 640 else 'gez-baku-model.webp'
+        minimum_width = 700 if width < 640 else 1200
+        assert day_image.evaluate('(e) => e.naturalWidth') >= minimum_width
+        assert expected_asset in day_image.evaluate('(e) => e.currentSrc')
+        loaded_resources = page.evaluate("performance.getEntriesByType('resource').map(({ name, encodedBodySize }) => ({ name, encodedBodySize }))")
+        assert not any(resource['name'].endswith('.mp4') for resource in loaded_resources)
+        scene_resource = next(resource for resource in loaded_resources if expected_asset in resource['name'])
+        assert scene_resource['encodedBodySize'] <= (70000 if width < 640 else 220000)
+        paw_resource = next(resource for resource in loaded_resources if 'gez-paw-high-five.webp' in resource['name'])
+        assert paw_resource['encodedBodySize'] <= 30000
+        paw_animation = page.locator('.gez-hero-paw').first.evaluate('(e) => getComputedStyle(e).animationName')
+        assert paw_animation == ('none' if width < 600 else 'gez-hero-drift')
         if args.screenshots:
             args.screenshots.mkdir(parents=True, exist_ok=True)
             page.screenshot(path=str(args.screenshots / f'hero-{width}.png'))
         page.emulate_media(reduced_motion='reduce')
-        expect(scene_videos.first).to_be_hidden()
-        expect(page.locator('main')).to_have_attribute('data-scene', 'day')
         assert page.locator('.gez-hero-paw').first.evaluate('(e) => getComputedStyle(e).animationName') == 'none'
         assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
 
